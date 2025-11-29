@@ -162,6 +162,18 @@ export default function PerformanceDashboard() {
   const [chartView, setChartView] = useState('equity'); 
   const [imgError, setImgError] = useState(false);
   
+  // Position sizes for each strategy (default 1 contract)
+  const [positionSizes, setPositionSizes] = useState(() => {
+    const sizes = {};
+    STRATEGY_CONFIG.forEach(cfg => {
+      sizes[cfg.name] = 1;
+    });
+    return sizes;
+  });
+  
+  // Initial equity for Portfolio (default 5,000,000 TWD)
+  const [initialEquity, setInitialEquity] = useState(5000000);
+  
   // Data loading states - use null initially to prevent hydration mismatch
   const [rawDataBundle, setRawDataBundle] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -246,40 +258,28 @@ export default function PerformanceDashboard() {
             strategyDataMaps[strategyName] = dataMap;
           });
           
-          const portfolioData = [];
-          let currentPortfolioEquity = 5000000; // Starting equity in TWD
-          
-          sortedDates.forEach((date, i) => {
-            let dailyTotalPnlTWD = 0;
-            const dayStats = { 
-              date, 
-              year: new Date(date).getFullYear(), 
-              month: new Date(date).getMonth() + 1 
-            };
-            
-            STRATEGY_CONFIG.forEach(cfg => {
-              const sData = strategyDataMaps[cfg.name]?.get(date);
-              if (sData) {
-                dailyTotalPnlTWD += sData.pnl; // Already in TWD
-                dayStats[`pnl_${cfg.name}`] = sData.pnl;
-                dayStats[`pnlTWD_${cfg.name}`] = sData.pnl; // Same value, already TWD
-              }
-            });
-            
-            currentPortfolioEquity += dailyTotalPnlTWD;
-            
-            portfolioData.push({
-              ...dayStats,
-              pnl: dailyTotalPnlTWD,
-              equity: currentPortfolioEquity,
-              id: i + 1
-            });
-          });
-          
+          // Store raw data without position size scaling
           setRawDataBundle({ 
             strategies: strategiesDataTWD, // All in TWD
-            portfolio: portfolioData, // All in TWD
-            trades: strategiesTradesTWD // All in TWD
+            portfolio: [], // Will be calculated in useMemo with position sizes
+            trades: strategiesTradesTWD, // All in TWD
+            rawPortfolioData: sortedDates.map((date, i) => {
+              const dayStats = { 
+                date, 
+                year: new Date(date).getFullYear(), 
+                month: new Date(date).getMonth() + 1 
+              };
+              
+              STRATEGY_CONFIG.forEach(cfg => {
+                const sData = strategyDataMaps[cfg.name]?.get(date);
+                if (sData) {
+                  dayStats[`pnl_${cfg.name}`] = sData.pnl;
+                  dayStats[`pnlTWD_${cfg.name}`] = sData.pnl;
+                }
+              });
+              
+              return dayStats;
+            })
           });
           setDataError(null);
         } else {
@@ -311,8 +311,40 @@ export default function PerformanceDashboard() {
     }
     
     if (selectedStrategy === 'Portfolio') {
+      // Calculate portfolio data with position sizes applied
+      const rawPortfolioData = rawDataBundle.rawPortfolioData || [];
+      const portfolioData = [];
+      let currentPortfolioEquity = initialEquity; // Starting equity in TWD (user configurable)
+      
+      rawPortfolioData.forEach((dayStats, i) => {
+        let dailyTotalPnlTWD = 0;
+        const scaledDayStats = { 
+          date: dayStats.date,
+          year: dayStats.year,
+          month: dayStats.month
+        };
+        
+        STRATEGY_CONFIG.forEach(cfg => {
+          const basePnl = dayStats[`pnl_${cfg.name}`] || 0;
+          const positionSize = positionSizes[cfg.name] || 1;
+          const scaledPnl = basePnl * positionSize; // Apply position size multiplier
+          dailyTotalPnlTWD += scaledPnl;
+          scaledDayStats[`pnl_${cfg.name}`] = scaledPnl;
+          scaledDayStats[`pnlTWD_${cfg.name}`] = scaledPnl;
+        });
+        
+        currentPortfolioEquity += dailyTotalPnlTWD;
+        
+        portfolioData.push({
+          ...scaledDayStats,
+          pnl: dailyTotalPnlTWD,
+          equity: currentPortfolioEquity,
+          id: i + 1
+        });
+      });
+      
       return { 
-        data: rawDataBundle.portfolio || [], 
+        data: portfolioData, 
         currency: 'TWD', 
         symbol: 'NT$',
         isPortfolio: true
@@ -332,7 +364,7 @@ export default function PerformanceDashboard() {
         isPortfolio: false
       };
     }
-  }, [selectedStrategy, rawDataBundle, isMounted]);
+  }, [selectedStrategy, rawDataBundle, isMounted, positionSizes, initialEquity]);
 
   const stats = useMemo(() => {
     const { data, isPortfolio } = currentViewContext;
@@ -479,9 +511,9 @@ export default function PerformanceDashboard() {
     // All strategies use 1,000,000 TWD as starting equity
     let startEquityTWD;
     if (isPortfolio) {
-      startEquityTWD = 5000000; // Portfolio starting equity in TWD
+      startEquityTWD = initialEquity; // Portfolio starting equity in TWD (user configurable)
     } else {
-      startEquityTWD = 1000000; // All individual strategies use 1,000,000 TWD
+      startEquityTWD = 1000000; // All individual strategies use 1,000,000 TWD (fixed)
     }
     
     const lastDataPoint = processedData[processedData.length - 1];
@@ -532,7 +564,7 @@ export default function PerformanceDashboard() {
       dataWithDD: processedData,
       symbol: currentViewContext.symbol
     };
-  }, [currentViewContext, rawDataBundle, selectedStrategy]);
+  }, [currentViewContext, rawDataBundle, selectedStrategy, initialEquity]);
 
   // --- 2.5 Monthly Returns Logic ---
   const monthlyReturns = useMemo(() => {
@@ -586,8 +618,8 @@ export default function PerformanceDashboard() {
   // --- 3. Portfolio Correlation (TWD Basis) ---
   const correlationMatrix = useMemo(() => {
     if (selectedStrategy !== 'Portfolio') return null;
-    const dataSource = rawDataBundle || defaultDataBundle;
-    if (!dataSource.portfolio || dataSource.portfolio.length === 0) return null;
+    const { data: portfolioData } = currentViewContext;
+    if (!portfolioData || portfolioData.length === 0) return null;
     
     const matrix = [];
     const calculateCorrelation = (arr1, arr2) => {
@@ -610,26 +642,26 @@ export default function PerformanceDashboard() {
     STRATEGY_CONFIG.forEach(rowStrat => {
       const row = { name: rowStrat.name };
       STRATEGY_CONFIG.forEach(colStrat => {
-        const data1 = dataSource.portfolio.map(d => d[`pnlTWD_${rowStrat.name}`] || 0);
-        const data2 = dataSource.portfolio.map(d => d[`pnlTWD_${colStrat.name}`] || 0);
+        const data1 = portfolioData.map(d => d[`pnlTWD_${rowStrat.name}`] || 0);
+        const data2 = portfolioData.map(d => d[`pnlTWD_${colStrat.name}`] || 0);
         row[colStrat.name] = calculateCorrelation(data1, data2);
       });
       matrix.push(row);
     });
     return matrix;
-  }, [selectedStrategy, rawDataBundle]);
+  }, [selectedStrategy, currentViewContext]);
 
   // --- 4. Contribution (TWD Basis) ---
   const contributionData = useMemo(() => {
     if (selectedStrategy !== 'Portfolio') return null;
-    const dataSource = rawDataBundle;
-    if (!dataSource?.portfolio || dataSource.portfolio.length === 0) return [];
+    const { data: portfolioData } = currentViewContext;
+    if (!portfolioData || portfolioData.length === 0) return [];
     
     return STRATEGY_CONFIG.map((cfg, idx) => {
-      const totalPnlTWD = dataSource.portfolio.reduce((acc, curr) => acc + (curr[`pnlTWD_${cfg.name}`] || 0), 0);
+      const totalPnlTWD = portfolioData.reduce((acc, curr) => acc + (curr[`pnlTWD_${cfg.name}`] || 0), 0);
       return { name: cfg.displayName || cfg.name, value: totalPnlTWD, fill: cfg.color };
     }).filter(d => d.value > 0);
-  }, [selectedStrategy, rawDataBundle]);
+  }, [selectedStrategy, currentViewContext]);
 
 
   return (
@@ -653,7 +685,7 @@ export default function PerformanceDashboard() {
       <div className="absolute top-[20%] right-[30%] w-[30%] h-[30%] rounded-full bg-cyan-900/20 blur-[100px] pointer-events-none z-0"></div>
 
 
-      <div className="max-w-[1600px] mx-auto p-2 sm:p-4 space-y-3 sm:space-y-4 relative z-10">
+      <div className="max-w-[1600px] mx-auto p-4 space-y-4 relative z-10">
         
         {/* Loading State */}
         {isLoading && (
@@ -678,20 +710,20 @@ export default function PerformanceDashboard() {
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b border-white/10 pb-4 gap-4 relative">
           
           {/* Left: Branding */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 sm:gap-3">
+          <div>
+            <div className="flex items-center gap-3">
               {/* Gold Icon */}
               <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20 backdrop-blur-sm">
-                <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                <Layers className="w-5 h-5 text-amber-400" />
               </div>
               {/* Gold Title */}
-              <h1 className="text-lg sm:text-xl xl:text-2xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+              <h1 className="text-2xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
                 FishBro Capital
               </h1>
             </div>
-            <div className="flex flex-wrap items-center gap-2 sm:space-x-3 mt-1.5 text-[10px] sm:text-xs text-slate-400">
+            <div className="flex items-center space-x-3 mt-1.5 text-xs text-slate-400">
               <span className="flex items-center">
-                <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 opacity-70"/>
+                <Calendar className="w-3.5 h-3.5 mr-1 opacity-70"/>
                 {(() => {
                   const { data } = currentViewContext;
                   if (data && data.length > 0) {
@@ -710,10 +742,10 @@ export default function PerformanceDashboard() {
           </div>
           
           {/* Middle: Controls */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center w-full sm:w-auto xl:mr-[240px]">
+          <div className="flex flex-col md:flex-row gap-3 items-end md:items-center xl:mr-[240px]"> 
             
             {/* Strategy Selectors */}
-            <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10 w-full sm:w-auto">
+            <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10">
                <button
                  onClick={() => setSelectedStrategy('Portfolio')}
                  className={`px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === 'Portfolio' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
@@ -737,13 +769,63 @@ export default function PerformanceDashboard() {
                ))}
             </div>
 
+            {/* Position Size Selectors and Initial Equity - Only show when Portfolio is selected */}
+            {selectedStrategy === 'Portfolio' && (
+              <div className="flex flex-wrap gap-2 bg-white/5 backdrop-blur-md p-2 rounded-lg border border-white/10">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">初始資金:</label>
+                  <input
+                    type="number"
+                    value={initialEquity}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 5000000;
+                      setInitialEquity(value);
+                    }}
+                    className="bg-white/10 border border-white/20 rounded px-2 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-24 sm:w-32"
+                    min="100000"
+                    step="100000"
+                  />
+                  <span className="text-[9px] sm:text-[10px] text-slate-500">NT$</span>
+                </div>
+                <div className="w-px h-6 bg-white/10 mx-1"></div>
+                <span className="text-[10px] sm:text-xs text-slate-400 font-medium self-center">口數設定:</span>
+                {STRATEGY_CONFIG.map((s) => (
+                  <div key={s.name} className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{backgroundColor: s.color}}></span>
+                    <label className="text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">{s.displayName}:</label>
+                    <select
+                      value={positionSizes[s.name] || 1}
+                      onChange={(e) => {
+                        const newSizes = { ...positionSizes };
+                        newSizes[s.name] = parseInt(e.target.value) || 1;
+                        setPositionSizes(newSizes);
+                      }}
+                      className="bg-white/10 border border-white/20 rounded px-1.5 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-[50px]"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Show initial equity for individual strategies (read-only) */}
+            {selectedStrategy !== 'Portfolio' && (
+              <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md px-2 py-1.5 rounded-lg border border-white/10">
+                <span className="text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">初始資金:</span>
+                <span className="text-[10px] sm:text-xs text-slate-200 font-mono">NT$ 1,000,000</span>
+              </div>
+            )}
+
           </div>
 
-          {/* Right: Absolute LOGO - Hidden on mobile, shown on xl+ */}
-          <div className="hidden xl:flex absolute top-0 right-0 bottom-4 items-center justify-end">
+          {/* Right: Absolute LOGO - Responsive sizing */}
+          <div className="absolute top-0 right-0 bottom-4 flex items-center justify-end">
              {imgError ? (
-               <div className="h-full px-6 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
-                 <span className="text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
+               <div className="h-full max-h-12 sm:max-h-16 xl:max-h-none px-3 sm:px-6 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
+                 <span className="text-sm sm:text-lg xl:text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
                    FishBro Capital
                  </span>
                </div>
@@ -751,7 +833,7 @@ export default function PerformanceDashboard() {
                <img 
                  src={LOGO_URL} 
                  alt="FishBro Capital" 
-                 className="h-full max-h-16 w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
+                 className="h-full max-h-12 sm:max-h-16 xl:max-h-none w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
                  onError={() => setImgError(true)} 
                />
              )}
@@ -968,9 +1050,10 @@ export default function PerformanceDashboard() {
             <CardContent className="p-0">
               {chartView === 'equity' ? (
                 <>
-                  <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative">
-                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: -10, bottom: 30 }}>
+                  <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative overflow-x-auto">
+                     <div className="min-w-[600px] h-full">
+                       <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: -10, bottom: 30 }}>
                         <defs>
                           <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
@@ -1002,21 +1085,23 @@ export default function PerformanceDashboard() {
                         />
                       </ComposedChart>
                     </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20">
-                     <div className="pt-1 sm:pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-3">
-                        <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
+                  <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20 overflow-x-auto">
+                    <div className="min-w-[600px] h-full">
+                     <div className="pt-2 mb-1 flex justify-between items-center">
+                        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-mono text-rose-400">
                             MDD: {stats.symbol}{stats.maxDDAmount.toLocaleString()}
                           </span>
-                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
+                          <span className="text-[10px] font-mono text-rose-400">
                             MDD%: -{stats.maxDrawdown}%
                           </span>
                         </div>
                      </div>
                      <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
                         <YAxis 
@@ -1034,11 +1119,12 @@ export default function PerformanceDashboard() {
                         <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
                       </AreaChart>
                     </ResponsiveContainer>
+                    </div>
                   </div>
                 </>
               ) : (
-                <div className="h-[300px] sm:h-[400px] p-3 sm:p-6 overflow-auto custom-scrollbar">
-                   <div className="min-w-[400px] sm:min-w-[600px]">
+                <div className="h-[400px] p-6 overflow-auto custom-scrollbar">
+                   <div className="min-w-[600px]">
                       <table className="w-full text-xs border-collapse">
                         <thead>
                           <tr>
@@ -1284,21 +1370,21 @@ function CompactCard({ label, value, prefix = "", suffix = "", sub, trend, inver
   
   return (
     <>
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg shadow-lg hover:border-white/20 transition-all flex flex-col justify-between min-h-[60px] sm:h-[60px] group relative overflow-visible">
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-3 py-2.5 rounded-lg shadow-lg hover:border-white/20 transition-all flex flex-col justify-between h-[60px] group relative overflow-visible">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-1.5 relative">
             <span 
               ref={labelRef}
-              className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-wider group-hover:text-slate-300 transition-colors cursor-help"
+              className="text-[10px] font-medium text-slate-400 uppercase tracking-wider group-hover:text-slate-300 transition-colors cursor-help"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
               {label}
             </span>
           </div>
-          {sub && <span className="text-[8px] sm:text-[9px] text-slate-500 font-mono bg-white/5 px-1 rounded">{sub}</span>}
+          {sub && <span className="text-[9px] text-slate-500 font-mono bg-white/5 px-1 rounded">{sub}</span>}
         </div>
-        <div className={`text-sm sm:text-base font-bold font-mono tracking-tight ${valueColor} truncate drop-shadow-sm`} suppressHydrationWarning>
+        <div className={`text-base font-bold font-mono tracking-tight ${valueColor} truncate drop-shadow-sm`} suppressHydrationWarning>
           {prefix}{formatValue(value)}{suffix}
         </div>
       </div>
