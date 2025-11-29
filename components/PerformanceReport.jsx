@@ -191,10 +191,25 @@ export default function PerformanceDashboard() {
     if (!isMounted) return;
     
     const loadExcelData = async () => {
+      let timeoutId = null;
       try {
         setIsLoading(true);
+        setDataError(null);
+        
+        // Add timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          setDataError('載入超時，請檢查網路連線或稍後再試');
+          setIsLoading(false);
+        }, 30000); // 30 second timeout
+        
         const response = await fetch('/api/strategies');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        if (timeoutId) clearTimeout(timeoutId);
         
         if (result.success && result.strategies) {
           // Convert ALL raw data to TWD first, before any calculations
@@ -287,10 +302,10 @@ export default function PerformanceDashboard() {
         }
       } catch (error) {
         console.error('Error loading Excel data:', error);
-        setDataError(error.message);
+        if (timeoutId) clearTimeout(timeoutId);
+        setDataError(error.message || '無法載入數據，請確認 CSV 文件是否存在');
         // Use default data as fallback
         setRawDataBundle(defaultDataBundle);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -742,7 +757,7 @@ export default function PerformanceDashboard() {
           </div>
           
           {/* Middle: Controls */}
-          <div className="flex flex-col md:flex-row gap-3 items-end md:items-center xl:mr-[240px]"> 
+          <div className="flex flex-col md:flex-row gap-3 items-end md:items-center pr-0 sm:pr-0 xl:pr-[240px]"> 
             
             {/* Strategy Selectors */}
             <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10">
@@ -821,11 +836,11 @@ export default function PerformanceDashboard() {
 
           </div>
 
-          {/* Right: Absolute LOGO - Responsive sizing */}
-          <div className="absolute top-0 right-0 bottom-4 flex items-center justify-end">
+          {/* Right: Fixed LOGO - Always in top right corner */}
+          <div className="fixed top-2 sm:top-4 right-2 sm:right-4 z-20 flex items-center justify-end">
              {imgError ? (
-               <div className="h-full max-h-12 sm:max-h-16 xl:max-h-none px-3 sm:px-6 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
-                 <span className="text-sm sm:text-lg xl:text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
+               <div className="max-h-10 sm:max-h-14 xl:max-h-16 px-3 sm:px-4 xl:px-6 py-1 sm:py-2 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
+                 <span className="text-xs sm:text-sm xl:text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
                    FishBro Capital
                  </span>
                </div>
@@ -833,7 +848,7 @@ export default function PerformanceDashboard() {
                <img 
                  src={LOGO_URL} 
                  alt="FishBro Capital" 
-                 className="h-full max-h-12 sm:max-h-16 xl:max-h-none w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
+                 className="max-h-10 sm:max-h-14 xl:max-h-16 w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
                  onError={() => setImgError(true)} 
                />
              )}
@@ -1348,18 +1363,37 @@ function CompactCard({ label, value, prefix = "", suffix = "", sub, trend, inver
   
   const handleMouseEnter = () => {
     if (hint && labelRef.current) {
-      const rect = labelRef.current.getBoundingClientRect();
-      setHintPosition({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX
-      });
+      const updatePosition = () => {
+        if (labelRef.current) {
+          const rect = labelRef.current.getBoundingClientRect();
+          setHintPosition({
+            top: rect.bottom + 8,
+            left: rect.left
+          });
+        }
+      };
+      updatePosition();
       setShowHint(true);
+      // Update position on scroll
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+      
+      // Store cleanup function
+      labelRef.current._hintCleanup = () => {
+        window.removeEventListener('scroll', updatePosition, true);
+        window.removeEventListener('resize', updatePosition);
+      };
     }
   };
   
   const handleMouseLeave = () => {
     setShowHint(false);
+    if (labelRef.current && labelRef.current._hintCleanup) {
+      labelRef.current._hintCleanup();
+      labelRef.current._hintCleanup = null;
+    }
   };
+  
   
   // Format number consistently to avoid hydration mismatch
   const formatValue = (val) => {
