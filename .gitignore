@@ -38,8 +38,11 @@ next-env.d.ts
 !/public/uploads/.gitkeep
 
 # sensitive data - CSV reports (contain trading strategy data)
+# Allow CSV files in public directory for deployment
 *.csv
 *.xlsx
+!public/**/*.csv
+!public/**/*.xlsx
 
 # API keys and secrets
 .env*.local

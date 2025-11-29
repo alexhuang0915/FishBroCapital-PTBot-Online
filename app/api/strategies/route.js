@@ -10,8 +10,9 @@ export async function GET() {
     const basePath = process.cwd();
     console.log('Base path:', basePath);
     
-    // Only search in root directory for CSV files
-    const searchPaths = [basePath];
+    // Search in both root directory and public/data directory
+    const publicDataPath = path.join(basePath, 'public', 'data');
+    const searchPaths = [basePath, publicDataPath];
     
     // Load all strategies from CSV/Excel files
     const strategies = loadAllStrategies(basePath, searchPaths);
