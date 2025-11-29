@@ -20,14 +20,10 @@ import {
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { 
   ArrowUpRight, ArrowDownRight, Activity, DollarSign, Percent, 
-  TrendingUp, Calendar, Sparkles, Loader2, 
-  BrainCircuit, Layers, PieChart as PieIcon, BarChart3, Grid, Scale, Target, Trophy, TimerReset,
-  Gauge, X, RefreshCw, Coins, Table2, LineChart as LineIcon, Atom, Upload, CheckCircle2
+  TrendingUp, Calendar, Loader2, 
+  Layers, PieChart as PieIcon, BarChart3, Grid, Scale, Target, Trophy, TimerReset,
+  Gauge, RefreshCw, Coins, Table2, LineChart as LineIcon, Atom
 } from "lucide-react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// --- Gemini API Setup ---
-const genAI = new GoogleGenerativeAI("");
 
 // --- 0. Configuration: Settings ---
 
@@ -172,16 +168,6 @@ export default function PerformanceDashboard() {
   const [dataError, setDataError] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   
-  // AI States
-  const [aiAnalysis, setAiAnalysis] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiError, setAiError] = useState("");
-  
-  // Upload States
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const fileInputRef = useRef(null);
 
   // Set mounted flag on client side only
   useEffect(() => {
@@ -645,80 +631,6 @@ export default function PerformanceDashboard() {
     }).filter(d => d.value > 0);
   }, [selectedStrategy, rawDataBundle]);
 
-  // --- AI Handlers ---
-  const handleRunDiagnosis = async () => {
-    if (aiAnalysis) { setAiAnalysis(""); return; }
-    setIsAnalyzing(true);
-    setAiError("");
-    setAiAnalysis("");
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
-      const context = selectedStrategy === 'Portfolio' ? "總體投資組合(TWD)" : `策略 ${selectedStrategy} (${currentViewContext.currency})`;
-      const prompt = `
-        你是一位量化基金經理。請針對「${context}」的回測數據給出短評。
-        
-        數據：
-        - 總損益: ${stats.symbol}${stats.netProfit}
-        - PF: ${stats.profitFactor}
-        - Sharpe: ${stats.sharpeRatio}
-        - SQN: ${stats.sqn}
-        - MDD: ${stats.maxDrawdown}%
-        
-        請用繁體中文。100字以內。
-      `;
-      const result = await model.generateContent(prompt);
-      setAiAnalysis(result.response.text());
-    } catch (e) {
-      setAiError("AI 連線錯誤");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // --- Upload Handlers ---
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadError("");
-    setUploadSuccess(false);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setUploadSuccess(true);
-        // 重新載入數據
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      } else {
-        setUploadError(result.error || '上傳失敗');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError('上傳失敗: ' + error.message);
-    } finally {
-      setIsUploading(false);
-      // 重置 input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
 
   return (
     <div className="min-h-screen font-sans text-slate-200 selection:bg-indigo-500 selection:text-white relative overflow-hidden bg-[#020617]">
@@ -748,7 +660,7 @@ export default function PerformanceDashboard() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-[#0f172a] border border-white/10 rounded-lg p-6 flex flex-col items-center gap-4">
               <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-              <p className="text-slate-300 text-sm">正在載入 Excel 數據...</p>
+              <p className="text-slate-300 text-sm">正在載入數據...</p>
             </div>
           </div>
         )}
@@ -757,7 +669,7 @@ export default function PerformanceDashboard() {
         {dataError && !isLoading && (
           <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-4 mb-4">
             <p className="text-rose-400 text-sm">
-              載入 Excel 數據時發生錯誤: {dataError}。使用模擬數據顯示。
+              載入數據時發生錯誤: {dataError}。請確認 CSV 文件是否存在於專案根目錄。
             </p>
           </div>
         )}
@@ -798,10 +710,10 @@ export default function PerformanceDashboard() {
           </div>
           
           {/* Middle: Controls */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center w-full sm:w-auto xl:mr-[240px]"> 
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center w-full sm:w-auto xl:mr-[240px]">
             
             {/* Strategy Selectors */}
-            <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10">
+            <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10 w-full sm:w-auto">
                <button
                  onClick={() => setSelectedStrategy('Portfolio')}
                  className={`px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === 'Portfolio' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
@@ -825,62 +737,6 @@ export default function PerformanceDashboard() {
                ))}
             </div>
 
-            {/* Upload Strategy */}
-            <div className="relative">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <button 
-                onClick={handleFileSelect}
-                disabled={isUploading}
-                className="flex items-center space-x-1 sm:space-x-1.5 text-[10px] sm:text-xs font-medium transition-all px-2 sm:px-3 py-1.5 rounded-lg border backdrop-blur-md bg-white/5 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUploading ? (
-                  <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin"/>
-                ) : uploadSuccess ? (
-                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400"/>
-                ) : (
-                  <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>
-                )}
-                <span className="whitespace-nowrap">{isUploading ? '上傳中...' : uploadSuccess ? '上傳成功' : '匯入策略'}</span>
-              </button>
-              {uploadError && (
-                <div className="absolute right-0 top-full mt-2 w-[280px] p-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-400 z-50">
-                  {uploadError}
-                </div>
-              )}
-            </div>
-
-            {/* AI Advisor */}
-            <div className="relative">
-                 <button 
-                    onClick={handleRunDiagnosis}
-                    disabled={isAnalyzing}
-                    className={`flex items-center space-x-1 sm:space-x-1.5 text-[10px] sm:text-xs font-medium transition-all px-2 sm:px-3 py-1.5 rounded-lg border backdrop-blur-md ${aiAnalysis ? 'bg-indigo-900/50 border-indigo-500/50 text-indigo-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30'}`}
-                 >
-                    {isAnalyzing ? <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin"/> : <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
-                    <span className="whitespace-nowrap">AI 結語</span>
-                 </button>
-
-                 {aiAnalysis && (
-                   <div className="absolute right-0 top-full mt-2 w-[280px] sm:w-[350px] p-3 bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg shadow-2xl z-50 animate-in fade-in zoom-in-95 origin-top-right ring-1 ring-white/10">
-                      <div className="flex items-start gap-3">
-                        <BrainCircuit className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 space-y-1">
-                           <div className="flex justify-between items-center mb-1">
-                              <h4 className="text-xs font-semibold text-indigo-200">策略診斷</h4>
-                              <button onClick={() => setAiAnalysis("")} className="text-slate-500 hover:text-slate-300"><X className="w-3 h-3" /></button>
-                           </div>
-                           <div className="text-xs text-slate-300 leading-relaxed">{aiAnalysis}</div>
-                        </div>
-                      </div>
-                   </div>
-                 )}
-            </div>
           </div>
 
           {/* Right: Absolute LOGO - Hidden on mobile, shown on xl+ */}

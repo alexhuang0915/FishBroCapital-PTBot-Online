@@ -10,30 +10,23 @@ export async function GET() {
     const basePath = process.cwd();
     console.log('Base path:', basePath);
     
-    // Check for uploaded files in public/uploads first
-    const uploadsPath = path.join(basePath, 'public', 'uploads');
-    let searchPaths = [basePath]; // Default: search in root directory
+    // Only search in root directory for CSV files
+    const searchPaths = [basePath];
     
-    if (existsSync(uploadsPath)) {
-      try {
-        const uploadFiles = await readdir(uploadsPath);
-        if (uploadFiles.length > 0) {
-          // If there are uploaded files, also search in uploads directory
-          searchPaths.push(uploadsPath);
-          console.log('Found uploaded files in:', uploadsPath);
-        }
-      } catch (err) {
-        console.log('No uploads directory or error reading:', err.message);
-      }
-    }
-    
-    // Load all strategies from CSV/Excel files (from both root and uploads)
+    // Load all strategies from CSV/Excel files
     const strategies = loadAllStrategies(basePath, searchPaths);
+    
+    // Check if we have any data
+    const hasData = Object.keys(strategies).some(name => strategies[name].data.length > 0);
+    
+    if (!hasData) {
+      console.warn('No strategy data found. Make sure CSV files are in the root directory.');
+    }
     
     // Log summary
     console.log('Loaded strategies:', Object.keys(strategies));
     Object.keys(strategies).forEach(name => {
-      console.log(`  ${name}: ${strategies[name].data.length} days`);
+      console.log(`  ${name}: ${strategies[name].data.length} days, ${strategies[name].trades?.length || 0} trades`);
     });
     
     return NextResponse.json({ 
