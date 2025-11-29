@@ -741,7 +741,7 @@ export default function PerformanceDashboard() {
       <div className="absolute top-[20%] right-[30%] w-[30%] h-[30%] rounded-full bg-cyan-900/20 blur-[100px] pointer-events-none z-0"></div>
 
 
-      <div className="max-w-[1600px] mx-auto p-4 space-y-4 relative z-10">
+      <div className="max-w-[1600px] mx-auto p-2 sm:p-4 space-y-3 sm:space-y-4 relative z-10">
         
         {/* Loading State */}
         {isLoading && (
@@ -766,20 +766,20 @@ export default function PerformanceDashboard() {
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center border-b border-white/10 pb-4 gap-4 relative">
           
           {/* Left: Branding */}
-          <div>
-            <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Gold Icon */}
               <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20 backdrop-blur-sm">
-                <Layers className="w-5 h-5 text-amber-400" />
+                <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               </div>
               {/* Gold Title */}
-              <h1 className="text-2xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+              <h1 className="text-lg sm:text-xl xl:text-2xl font-serif font-bold tracking-wide bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
                 FishBro Capital
               </h1>
             </div>
-            <div className="flex items-center space-x-3 mt-1.5 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-2 sm:space-x-3 mt-1.5 text-[10px] sm:text-xs text-slate-400">
               <span className="flex items-center">
-                <Calendar className="w-3.5 h-3.5 mr-1 opacity-70"/>
+                <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 opacity-70"/>
                 {(() => {
                   const { data } = currentViewContext;
                   if (data && data.length > 0) {
@@ -798,26 +798,29 @@ export default function PerformanceDashboard() {
           </div>
           
           {/* Middle: Controls */}
-          <div className="flex flex-col md:flex-row gap-3 items-end md:items-center xl:mr-[240px]"> 
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center w-full sm:w-auto xl:mr-[240px]"> 
             
             {/* Strategy Selectors */}
             <div className="flex flex-wrap gap-1 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10">
                <button
                  onClick={() => setSelectedStrategy('Portfolio')}
-                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === 'Portfolio' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                 className={`px-2 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === 'Portfolio' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
                >
-                 <PieIcon className="w-3.5 h-3.5 mr-1.5" />
-                 Portfolio (TWD)
+                 <PieIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
+                 <span className="hidden sm:inline">Portfolio (TWD)</span>
+                 <span className="sm:hidden">Portfolio</span>
                </button>
                <div className="w-px h-5 bg-white/10 my-auto mx-1"></div>
                {STRATEGY_CONFIG.map((s, idx) => (
                  <button
                    key={s.name}
                    onClick={() => setSelectedStrategy(s.name)}
-                   className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === s.name ? 'bg-white/10 text-white border border-white/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                   className={`px-1.5 sm:px-2.5 py-1.5 text-[10px] sm:text-xs font-medium rounded-md transition-all flex items-center ${selectedStrategy === s.name ? 'bg-white/10 text-white border border-white/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
                  >
-                   <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5" style={{backgroundColor: s.color}}></span>
-                   {s.displayName || s.name} <span className="ml-1 opacity-50 text-[10px]">(TWD)</span>
+                   <span className="w-1.5 h-1.5 rounded-full inline-block mr-1 sm:mr-1.5" style={{backgroundColor: s.color}}></span>
+                   <span className="hidden sm:inline">{s.displayName || s.name}</span>
+                   <span className="sm:hidden">{s.displayName?.replace(' VIX ', ' ').replace(' VIX', '') || s.name}</span>
+                   <span className="ml-1 opacity-50 text-[9px] sm:text-[10px] hidden sm:inline">(TWD)</span>
                  </button>
                ))}
             </div>
@@ -834,16 +837,16 @@ export default function PerformanceDashboard() {
               <button 
                 onClick={handleFileSelect}
                 disabled={isUploading}
-                className="flex items-center space-x-1.5 text-xs font-medium transition-all px-3 py-1.5 rounded-lg border backdrop-blur-md bg-white/5 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1 sm:space-x-1.5 text-[10px] sm:text-xs font-medium transition-all px-2 sm:px-3 py-1.5 rounded-lg border backdrop-blur-md bg-white/5 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin"/>
+                  <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin"/>
                 ) : uploadSuccess ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400"/>
+                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400"/>
                 ) : (
-                  <Upload className="w-3.5 h-3.5"/>
+                  <Upload className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>
                 )}
-                <span>{isUploading ? '上傳中...' : uploadSuccess ? '上傳成功' : '匯入策略'}</span>
+                <span className="whitespace-nowrap">{isUploading ? '上傳中...' : uploadSuccess ? '上傳成功' : '匯入策略'}</span>
               </button>
               {uploadError && (
                 <div className="absolute right-0 top-full mt-2 w-[280px] p-2 bg-rose-500/10 border border-rose-500/30 rounded-lg text-xs text-rose-400 z-50">
@@ -857,14 +860,14 @@ export default function PerformanceDashboard() {
                  <button 
                     onClick={handleRunDiagnosis}
                     disabled={isAnalyzing}
-                    className={`flex items-center space-x-1.5 text-xs font-medium transition-all px-3 py-1.5 rounded-lg border backdrop-blur-md ${aiAnalysis ? 'bg-indigo-900/50 border-indigo-500/50 text-indigo-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30'}`}
+                    className={`flex items-center space-x-1 sm:space-x-1.5 text-[10px] sm:text-xs font-medium transition-all px-2 sm:px-3 py-1.5 rounded-lg border backdrop-blur-md ${aiAnalysis ? 'bg-indigo-900/50 border-indigo-500/50 text-indigo-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30'}`}
                  >
-                    {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Sparkles className="w-3.5 h-3.5"/>}
-                    <span>AI 結語</span>
+                    {isAnalyzing ? <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin"/> : <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5"/>}
+                    <span className="whitespace-nowrap">AI 結語</span>
                  </button>
 
                  {aiAnalysis && (
-                   <div className="absolute right-0 top-full mt-2 w-[350px] p-3 bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg shadow-2xl z-50 animate-in fade-in zoom-in-95 origin-top-right ring-1 ring-white/10">
+                   <div className="absolute right-0 top-full mt-2 w-[280px] sm:w-[350px] p-3 bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg shadow-2xl z-50 animate-in fade-in zoom-in-95 origin-top-right ring-1 ring-white/10">
                       <div className="flex items-start gap-3">
                         <BrainCircuit className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
                         <div className="flex-1 space-y-1">
@@ -880,19 +883,19 @@ export default function PerformanceDashboard() {
             </div>
           </div>
 
-          {/* Right: Absolute LOGO */}
-          <div className="absolute top-0 right-0 bottom-4 flex items-center justify-end">
+          {/* Right: Absolute LOGO - Hidden on mobile, shown on xl+ */}
+          <div className="hidden xl:flex absolute top-0 right-0 bottom-4 items-center justify-end">
              {imgError ? (
                <div className="h-full px-6 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
-                  <span className="text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
-                    FishBro Capital
-                  </span>
+                 <span className="text-xl font-serif italic font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
+                   FishBro Capital
+                 </span>
                </div>
              ) : (
                <img 
                  src={LOGO_URL} 
                  alt="FishBro Capital" 
-                 className="h-full w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
+                 className="h-full max-h-16 w-auto rounded-lg border border-white/10 shadow-2xl object-contain bg-[#020617]/60 backdrop-blur-sm"
                  onError={() => setImgError(true)} 
                />
              )}
@@ -1109,9 +1112,9 @@ export default function PerformanceDashboard() {
             <CardContent className="p-0">
               {chartView === 'equity' ? (
                 <>
-                  <div className="h-[300px] p-4 pb-0 relative">
+                  <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative">
                      <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 0, left: 0, bottom: 30 }}>
+                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: -10, bottom: 30 }}>
                         <defs>
                           <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
@@ -1144,20 +1147,20 @@ export default function PerformanceDashboard() {
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="h-[100px] p-4 pt-0 border-t border-white/10 bg-black/20">
-                     <div className="pt-2 mb-1 flex justify-between items-center">
-                        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-mono text-rose-400">
+                  <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20">
+                     <div className="pt-1 sm:pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-3">
+                        <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
                             MDD: {stats.symbol}{stats.maxDDAmount.toLocaleString()}
                           </span>
-                          <span className="text-[10px] font-mono text-rose-400">
+                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
                             MDD%: -{stats.maxDrawdown}%
                           </span>
                         </div>
                      </div>
                      <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
                         <YAxis 
@@ -1178,8 +1181,8 @@ export default function PerformanceDashboard() {
                   </div>
                 </>
               ) : (
-                <div className="h-[400px] p-6 overflow-auto custom-scrollbar">
-                   <div className="min-w-[600px]">
+                <div className="h-[300px] sm:h-[400px] p-3 sm:p-6 overflow-auto custom-scrollbar">
+                   <div className="min-w-[400px] sm:min-w-[600px]">
                       <table className="w-full text-xs border-collapse">
                         <thead>
                           <tr>
@@ -1425,21 +1428,21 @@ function CompactCard({ label, value, prefix = "", suffix = "", sub, trend, inver
   
   return (
     <>
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-3 py-2.5 rounded-lg shadow-lg hover:border-white/20 transition-all flex flex-col justify-between h-[60px] group relative overflow-visible">
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg shadow-lg hover:border-white/20 transition-all flex flex-col justify-between min-h-[60px] sm:h-[60px] group relative overflow-visible">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-1.5 relative">
             <span 
               ref={labelRef}
-              className="text-[10px] font-medium text-slate-400 uppercase tracking-wider group-hover:text-slate-300 transition-colors cursor-help"
+              className="text-[9px] sm:text-[10px] font-medium text-slate-400 uppercase tracking-wider group-hover:text-slate-300 transition-colors cursor-help"
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
               {label}
             </span>
           </div>
-          {sub && <span className="text-[9px] text-slate-500 font-mono bg-white/5 px-1 rounded">{sub}</span>}
+          {sub && <span className="text-[8px] sm:text-[9px] text-slate-500 font-mono bg-white/5 px-1 rounded">{sub}</span>}
         </div>
-        <div className={`text-base font-bold font-mono tracking-tight ${valueColor} truncate drop-shadow-sm`} suppressHydrationWarning>
+        <div className={`text-sm sm:text-base font-bold font-mono tracking-tight ${valueColor} truncate drop-shadow-sm`} suppressHydrationWarning>
           {prefix}{formatValue(value)}{suffix}
         </div>
       </div>
