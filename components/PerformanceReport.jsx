@@ -1060,8 +1060,8 @@ export default function PerformanceDashboard() {
           
           <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl">
             <CardHeader className="border-b border-white/10 py-3 px-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                   <div className="flex items-center gap-2">
                     <Gauge className="w-4 h-4 text-indigo-400" />
                     <span className="text-sm font-medium text-slate-200">Performance Analysis</span>
@@ -1083,7 +1083,7 @@ export default function PerformanceDashboard() {
                     </button>
                   </div>
                 </div>
-                <span className={`text-sm font-mono font-bold ${stats.netProfit > 0 ? 'text-emerald-400' : 'text-rose-400'}`} suppressHydrationWarning>
+                <span className={`text-[10px] sm:text-xs md:text-sm font-mono font-bold break-all ${stats.netProfit > 0 ? 'text-emerald-400' : 'text-rose-400'}`} suppressHydrationWarning>
                   {stats.symbol}{stats.netProfit.toLocaleString()}
                 </span>
               </div>
@@ -1130,13 +1130,13 @@ export default function PerformanceDashboard() {
                   </div>
                   <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20 overflow-x-auto">
                     <div className="min-w-[600px] h-full">
-                     <div className="pt-2 mb-1 flex justify-between items-center">
+                     <div className="pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
                         <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-mono text-rose-400">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400 break-all">
                             MDD: {stats.symbol}{stats.maxDDAmount.toLocaleString()}
                           </span>
-                          <span className="text-[10px] font-mono text-rose-400">
+                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
                             MDD%: -{stats.maxDrawdown}%
                           </span>
                         </div>
