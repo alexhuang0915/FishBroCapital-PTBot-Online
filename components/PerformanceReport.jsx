@@ -1133,10 +1133,10 @@ export default function PerformanceDashboard() {
             <CardContent className="p-0">
               {chartView === 'equity' ? (
                 <div className="h-[500px] sm:h-[600px] p-4 flex flex-col">
-                  {/* Equity Chart - 2/3 of space */}
+                  {/* Combined Equity and Drawdown Chart */}
                   <div className="flex-[2] p-2 sm:p-4 pb-0 relative min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 40, bottom: 30 }}>
+                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 40, bottom: 5 }}>
                         <defs>
                           <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
@@ -1145,7 +1145,25 @@ export default function PerformanceDashboard() {
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 0}} axisLine={false} tickLine={false} height={1} />
-                        <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} tickFormatter={val => `${(val/1000).toFixed(0)}k`} width={45}/>
+                        <YAxis 
+                          yAxisId="equity" 
+                          domain={['auto', 'auto']} 
+                          tick={{fontSize: 10, fill: '#94a3b8'}} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          tickFormatter={val => `${(val/1000).toFixed(0)}k`} 
+                          width={45}
+                        />
+                        <YAxis 
+                          yAxisId="drawdown" 
+                          orientation="right"
+                          domain={['auto', 0]} 
+                          tick={{fontSize: 10, fill: '#94a3b8'}} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          tickFormatter={val => `${(val/1000).toFixed(0)}k`} 
+                          width={45}
+                        />
                         <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
                         {yearBoundaries.map((date, idx) => (
                           <ReferenceLine 
@@ -1156,30 +1174,14 @@ export default function PerformanceDashboard() {
                             strokeDasharray="2 2"
                           />
                         ))}
-                        <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
-                        <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
-                        <Brush 
-                          dataKey="date" 
-                          height={25}
-                          stroke="#6366f1"
-                          fill="rgba(99, 102, 241, 0.15)"
-                          strokeWidth={1.5}
-                          tickFormatter={(value) => {
-                            if (!value) return '';
-                            try {
-                              const date = new Date(value);
-                              return `${date.getMonth() + 1}/${date.getDate()}`;
-                            } catch {
-                              return value;
-                            }
-                          }}
-                          style={{ cursor: 'grab' }}
-                        />
+                        <Area yAxisId="equity" type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
+                        <Line yAxisId="equity" type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
+                        <Area yAxisId="drawdown" type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
-                  {/* Drawdown Chart - 1/3 of space */}
-                  <div className="flex-[1] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20 min-h-0">
+                  {/* Drawdown Info and Brush */}
+                  <div className="flex-[1] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20 min-h-0 flex flex-col">
                     <div className="pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
                       <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -1191,34 +1193,53 @@ export default function PerformanceDashboard() {
                         </span>
                       </div>
                     </div>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: 40, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                        <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
-                        <YAxis 
-                          domain={['auto', 0]} 
-                          tick={{fontSize: 10, fill: '#94a3b8'}} 
-                          tickLine={false} 
-                          axisLine={false} 
-                          width={45}
-                          tickFormatter={val => `${(val/1000).toFixed(0)}k`}
-                        />
-                        <Tooltip 
-                          content={<CompactTooltip symbol={stats.symbol} />} 
-                          cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} 
-                        />
-                        {yearBoundaries.map((date, idx) => (
-                          <ReferenceLine 
-                            key={`year-boundary-dd-${idx}`} 
-                            x={date} 
-                            stroke="rgba(148, 163, 184, 0.3)" 
-                            strokeWidth={1} 
-                            strokeDasharray="2 2"
+                    <div className="flex-1 min-h-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: 40, bottom: 30 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                          <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
+                          <YAxis 
+                            domain={['auto', 0]} 
+                            tick={{fontSize: 10, fill: '#94a3b8'}} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            width={45}
+                            tickFormatter={val => `${(val/1000).toFixed(0)}k`}
                           />
-                        ))}
-                        <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                          <Tooltip 
+                            content={<CompactTooltip symbol={stats.symbol} />} 
+                            cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} 
+                          />
+                          {yearBoundaries.map((date, idx) => (
+                            <ReferenceLine 
+                              key={`year-boundary-dd-${idx}`} 
+                              x={date} 
+                              stroke="rgba(148, 163, 184, 0.3)" 
+                              strokeWidth={1} 
+                              strokeDasharray="2 2"
+                            />
+                          ))}
+                          <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
+                          <Brush 
+                            dataKey="date" 
+                            height={25}
+                            stroke="#6366f1"
+                            fill="rgba(99, 102, 241, 0.15)"
+                            strokeWidth={1.5}
+                            tickFormatter={(value) => {
+                              if (!value) return '';
+                              try {
+                                const date = new Date(value);
+                                return `${date.getMonth() + 1}/${date.getDate()}`;
+                              } catch {
+                                return value;
+                              }
+                            }}
+                            style={{ cursor: 'grab' }}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
               ) : chartView === 'analysis' ? (
