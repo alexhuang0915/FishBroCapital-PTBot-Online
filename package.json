@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/clean-build.js",
+    "pages:build": "npx @cloudflare/next-on-pages@1",
+    "build:cloudflare": "npx @cloudflare/next-on-pages@1",
     "postbuild": "node scripts/clean-build.js",
-    "build:cloudflare": "next build && node scripts/clean-build.js",
     "start": "next start",
     "lint": "next lint",
     "preprocess": "node _PythonScripts/preprocess_strategies.mjs"
@@ -25,6 +26,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "^20.14.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
