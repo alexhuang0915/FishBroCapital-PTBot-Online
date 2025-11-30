@@ -15,7 +15,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Brush
+  Brush,
+  ReferenceLine
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { 
@@ -615,6 +616,30 @@ export default function PerformanceDashboard() {
     };
   }, [currentViewContext, rawDataBundle, selectedStrategy, initialEquity, positionSizes]);
 
+  // --- 2.4 Year Boundary Lines ---
+  const yearBoundaries = useMemo(() => {
+    if (!stats.dataWithDD || stats.dataWithDD.length === 0) return [];
+    
+    const boundaries = [];
+    let lastYear = null;
+    
+    stats.dataWithDD.forEach((d, i) => {
+      if (!d || !d.date) return;
+      
+      const date = new Date(d.date);
+      const currentYear = date.getFullYear();
+      
+      // If year changed, mark this point as a boundary
+      if (lastYear !== null && currentYear !== lastYear) {
+        boundaries.push(d.date);
+      }
+      
+      lastYear = currentYear;
+    });
+    
+    return boundaries;
+  }, [stats.dataWithDD]);
+
   // --- 2.5 Monthly Returns Logic ---
   const monthlyReturns = useMemo(() => {
     const { data } = currentViewContext;
@@ -1122,6 +1147,15 @@ export default function PerformanceDashboard() {
                         <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 0}} axisLine={false} tickLine={false} height={1} />
                         <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} tickFormatter={val => `${(val/1000).toFixed(0)}k`} width={45}/>
                         <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
+                        {yearBoundaries.map((date, idx) => (
+                          <ReferenceLine 
+                            key={`year-boundary-${idx}`} 
+                            x={date} 
+                            stroke="rgba(148, 163, 184, 0.3)" 
+                            strokeWidth={1} 
+                            strokeDasharray="2 2"
+                          />
+                        ))}
                         <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
                         <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
                         <Brush 
@@ -1173,6 +1207,15 @@ export default function PerformanceDashboard() {
                           content={<CompactTooltip symbol={stats.symbol} />} 
                           cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} 
                         />
+                        {yearBoundaries.map((date, idx) => (
+                          <ReferenceLine 
+                            key={`year-boundary-dd-${idx}`} 
+                            x={date} 
+                            stroke="rgba(148, 163, 184, 0.3)" 
+                            strokeWidth={1} 
+                            strokeDasharray="2 2"
+                          />
+                        ))}
                         <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
                       </AreaChart>
                     </ResponsiveContainer>
