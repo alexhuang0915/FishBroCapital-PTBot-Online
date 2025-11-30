@@ -1111,7 +1111,7 @@ export default function PerformanceDashboard() {
                   {/* Equity Chart - 2/3 of space */}
                   <div className="flex-[2] p-2 sm:p-4 pb-0 relative min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 40, bottom: 5 }}>
+                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 40, bottom: 30 }}>
                         <defs>
                           <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
