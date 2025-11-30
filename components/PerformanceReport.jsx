@@ -1098,8 +1098,7 @@ export default function PerformanceDashboard() {
             <CardContent className="p-0">
               {chartView === 'equity' ? (
                 <>
-                  <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative overflow-x-auto">
-                     <div className="min-w-[600px] h-full">
+                  <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative">
                        <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 50, bottom: 5 }}>
                         <defs>
@@ -1116,10 +1115,8 @@ export default function PerformanceDashboard() {
                         <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
                       </ComposedChart>
                     </ResponsiveContainer>
-                    </div>
                   </div>
-                  <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20 overflow-x-auto">
-                    <div className="min-w-[600px] h-full">
+                  <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20">
                      <div className="pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
                         <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -1150,7 +1147,6 @@ export default function PerformanceDashboard() {
                         <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
                       </AreaChart>
                     </ResponsiveContainer>
-                    </div>
                   </div>
                 </>
               ) : (
