@@ -1102,7 +1102,7 @@ export default function PerformanceDashboard() {
                   <div className="h-[250px] sm:h-[300px] p-2 sm:p-4 pb-0 relative overflow-x-auto">
                      <div className="min-w-[600px] h-full">
                        <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 50, bottom: 30 }}>
+                        <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 50, bottom: 5 }}>
                         <defs>
                           <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
@@ -1115,23 +1115,6 @@ export default function PerformanceDashboard() {
                         <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
                         <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
                         <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
-                        <Brush 
-                          dataKey="date" 
-                          height={25}
-                          stroke="#6366f1"
-                          fill="rgba(99, 102, 241, 0.15)"
-                          strokeWidth={1.5}
-                          tickFormatter={(value) => {
-                            if (!value) return '';
-                            try {
-                              const date = new Date(value);
-                              return `${date.getMonth() + 1}/${date.getDate()}`;
-                            } catch {
-                              return value;
-                            }
-                          }}
-                          style={{ cursor: 'grab' }}
-                        />
                       </ComposedChart>
                     </ResponsiveContainer>
                     </div>
@@ -1150,7 +1133,7 @@ export default function PerformanceDashboard() {
                         </div>
                      </div>
                      <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: 50, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                         <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
                         <YAxis 
@@ -1158,7 +1141,7 @@ export default function PerformanceDashboard() {
                           tick={{fontSize: 10, fill: '#94a3b8'}} 
                           tickLine={false} 
                           axisLine={false} 
-                          width={55}
+                          width={60}
                           tickFormatter={val => `${(val/1000).toFixed(0)}k`}
                         />
                         <Tooltip 
