@@ -29,9 +29,9 @@ git push
 
 ### 3. 自動部署
 
-Netlify 會自動：
+Cloudflare Pages 會自動：
 - 檢測到 Git 推送
-- 構建應用
+- 構建應用（使用 `@cloudflare/next-on-pages` 適配器）
 - 部署包含預處理 JSON 的版本
 
 ### 4. 線上版本載入流程
@@ -47,7 +47,7 @@ Netlify 會自動：
 1. 更新 CSV 文件
 2. 運行 `npm run preprocess` 重新生成 JSON
 3. 提交並推送更改
-4. Netlify 自動部署
+4. Cloudflare Pages 自動部署
 
 ## 開發模式
 

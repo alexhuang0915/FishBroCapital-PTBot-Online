@@ -29,28 +29,16 @@
 
 ### 部署到線上
 
-#### Vercel 部署（推薦）
+#### Cloudflare Pages（當前使用）
 
-1. **安裝 Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
+項目已配置並部署到 Cloudflare Pages：
 
-2. **部署**
-   ```bash
-   vercel
-   ```
+- **線上網址**: `https://fishbrocapital-ptbot-online.pages.dev/`
+- **自動部署**: 每次 `git push` 到 `main` 分支會自動構建和部署
+- **構建命令**: `npm run pages:build`
+- **輸出目錄**: `.vercel/output/static`
 
-3. **或使用 GitHub 集成**
-   - 將代碼推送到 GitHub
-   - 在 Vercel 中導入專案
-   - 自動部署完成
-
-#### 其他平台
-
-- **Netlify**: 支援 Next.js，可直接連接 GitHub
-- **Railway**: 支援 Node.js 應用
-- **自建伺服器**: 使用 `npm run build` 和 `npm start`
+詳細部署說明請參考 `DEPLOYMENT.md`
 
 ## 📁 專案結構
 
@@ -70,7 +58,10 @@ FishBroCapital_PTBot_online/
 ├── lib/
 │   ├── excelParser.js        # CSV/Excel 解析器
 │   └── utils.js              # 工具函數
-├── *.csv                      # 策略回測數據（CSV 格式）
+├── public/
+│   └── data/
+│       ├── *.csv              # 策略回測數據（CSV 格式）
+│       └── strategies.json    # 預處理的 JSON 數據
 └── package.json
 ```
 
@@ -112,8 +103,11 @@ npm run dev
 # 建置生產版本
 npm run build
 
-# 啟動生產伺服器
-npm start
+# 預處理數據（生成 strategies.json）
+npm run preprocess
+
+# Cloudflare Pages 構建（包含適配器）
+npm run pages:build
 
 # 代碼檢查
 npm run lint
