@@ -160,7 +160,7 @@ const defaultDataBundle = generatePortfolio();
 
 export default function PerformanceDashboard() {
   const [selectedStrategy, setSelectedStrategy] = useState('Portfolio'); 
-  const [chartView, setChartView] = useState('equity'); 
+  const [chartView, setChartView] = useState('equity'); // 'equity', 'heatmap', 'analysis' 
   const [imgError, setImgError] = useState(false);
   
   // Position sizes for each strategy (default 1 contract)
@@ -1088,6 +1088,15 @@ export default function PerformanceDashboard() {
                       <Table2 className="w-3 h-3 mr-1.5" />
                       Heatmap
                     </button>
+                    {selectedStrategy === 'Portfolio' && (
+                      <button 
+                        onClick={() => setChartView('analysis')}
+                        className={`flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'analysis' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                      >
+                        <PieIcon className="w-3 h-3 mr-1.5" />
+                        Analysis
+                      </button>
+                    )}
                   </div>
                 </div>
                 <span className={`text-[10px] sm:text-xs md:text-sm font-mono font-bold break-all ${stats.netProfit > 0 ? 'text-emerald-400' : 'text-rose-400'}`} suppressHydrationWarning>
@@ -1097,163 +1106,155 @@ export default function PerformanceDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {chartView === 'equity' ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-                  {/* Left: Equity Chart (Square) */}
-                  <div className="flex flex-col">
-                    <div className="aspect-square max-w-full p-2 sm:p-4 pb-0 relative">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 50, bottom: 5 }}>
-                          <defs>
-                            <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                          <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 0}} axisLine={false} tickLine={false} height={1} />
-                          <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} tickFormatter={val => `${(val/1000).toFixed(0)}k`} width={60}/>
-                          <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
-                          <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
-                          <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="h-[80px] sm:h-[100px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20">
-                      <div className="pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
-                        <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400 break-words">
-                            MDD: {stats.symbol}{stats.maxDDAmount.toLocaleString()}
-                          </span>
-                          <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
-                            MDD%: -{stats.maxDrawdown}%
-                          </span>
-                        </div>
-                      </div>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: 50, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                          <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
-                          <YAxis 
-                            domain={['auto', 0]} 
-                            tick={{fontSize: 10, fill: '#94a3b8'}} 
-                            tickLine={false} 
-                            axisLine={false} 
-                            width={60}
-                            tickFormatter={val => `${(val/1000).toFixed(0)}k`}
-                          />
-                          <Tooltip 
-                            content={<CompactTooltip symbol={stats.symbol} />} 
-                            cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} 
-                          />
-                          <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
+                <div className="aspect-square p-4 flex flex-col">
+                  {/* Equity Chart - Takes more space */}
+                  <div className="flex-1 p-2 sm:p-4 pb-0 relative min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 50, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 0}} axisLine={false} tickLine={false} height={1} />
+                        <YAxis domain={['auto', 'auto']} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} tickFormatter={val => `${(val/1000).toFixed(0)}k`} width={60}/>
+                        <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
+                        <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
+                        <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
                   </div>
+                  {/* Drawdown Chart - Increased height */}
+                  <div className="h-[150px] sm:h-[180px] p-2 sm:p-4 pt-0 border-t border-white/10 bg-black/20">
+                    <div className="pt-2 mb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
+                      <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Drawdown</span>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-rose-400 break-words">
+                          MDD: {stats.symbol}{stats.maxDDAmount.toLocaleString()}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] font-mono text-rose-400">
+                          MDD%: -{stats.maxDrawdown}%
+                        </span>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 5, right: 5, left: 50, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                        <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
+                        <YAxis 
+                          domain={['auto', 0]} 
+                          tick={{fontSize: 10, fill: '#94a3b8'}} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          width={60}
+                          tickFormatter={val => `${(val/1000).toFixed(0)}k`}
+                        />
+                        <Tooltip 
+                          content={<CompactTooltip symbol={stats.symbol} />} 
+                          cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} 
+                        />
+                        <Area type="step" dataKey="drawdown" stroke="#f43f5e" fill="#f43f5e" fillOpacity={0.2} strokeWidth={1} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ) : chartView === 'analysis' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
+                        <BarChart3 className="w-3.5 h-3.5 mr-2 text-indigo-400" />
+                        PnL Contribution ({currentViewContext.currency})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center -mt-2">
+                      {contributionData && contributionData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={contributionData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={0}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                              stroke="none"
+                            >
+                              {contributionData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<CompactTooltip symbol="NT$" />} />
+                            <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '11px', right: 20, color: '#94a3b8' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-slate-500 text-sm">No contribution data available</div>
+                      )}
+                    </CardContent>
+                  </Card>
 
-                  {/* Right: Contribution Pie Chart and Correlation Matrix */}
-                  {selectedStrategy === 'Portfolio' ? (
-                    <div className="flex flex-col gap-4">
-                      <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl flex-1">
-                        <CardHeader className="py-3 px-4">
-                          <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
-                            <BarChart3 className="w-3.5 h-3.5 mr-2 text-indigo-400" />
-                            PnL Contribution ({currentViewContext.currency})
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-[240px] flex items-center justify-center -mt-2">
-                          {contributionData && contributionData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
-                                <Pie
-                                  data={contributionData}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={0}
-                                  outerRadius={70}
-                                  paddingAngle={2}
-                                  dataKey="value"
-                                  stroke="none"
-                                >
-                                  {contributionData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                  ))}
-                                </Pie>
-                                <Tooltip content={<CompactTooltip symbol="NT$" />} />
-                                <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '11px', right: 20, color: '#94a3b8' }} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <div className="text-slate-500 text-sm">No contribution data available</div>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl flex-1">
-                        <CardHeader className="py-3 px-4">
-                          <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
-                            <Grid className="w-3.5 h-3.5 mr-2 text-indigo-400" />
-                            Correlation Matrix
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 flex items-center justify-center h-[240px]">
-                          <div className="overflow-x-auto w-full custom-scrollbar">
-                            <table className="w-full text-[11px] text-center">
-                              <thead>
-                                <tr>
-                                  <th className="p-2 text-left text-slate-400 font-medium min-w-[100px]">策略</th>
-                                  {STRATEGY_CONFIG.map(s => (
-                                    <th key={s.name} className="p-2 text-slate-400 font-medium whitespace-nowrap">
-                                      {s.displayName || s.name}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {correlationMatrix && correlationMatrix.length > 0 ? (
-                                  correlationMatrix.map((row, i) => {
-                                    const rowConfig = STRATEGY_CONFIG.find(s => s.name === row.name);
-                                    return (
-                                      <tr key={row.name}>
-                                        <td className="p-2 text-slate-400 font-medium text-left whitespace-nowrap">
-                                          {rowConfig?.displayName || row.name}
-                                        </td>
-                                        {STRATEGY_CONFIG.map(col => {
-                                          const val = row[col.name];
-                                          let bgClass = '';
-                                          let textClass = 'text-slate-300';
-                                          if (val === 1) { bgClass = 'bg-white/10'; textClass='text-slate-600'; }
-                                          else if (val > 0.5) { bgClass = 'bg-rose-900/40'; textClass='text-rose-300'; } 
-                                          else if (val < 0) { bgClass = 'bg-emerald-900/40'; textClass='text-emerald-300'; } 
-                                          else { bgClass = 'bg-white/5'; }
-                                          return (
-                                            <td key={col.name} className={`p-2 border border-white/10 ${bgClass} ${textClass}`}>
-                                              {val.toFixed(2)}
-                                            </td>
-                                          );
-                                        })}
-                                      </tr>
-                                    );
-                                  })
-                                ) : (
-                                  <tr>
-                                    <td colSpan={STRATEGY_CONFIG.length + 1} className="p-4 text-center text-slate-500 text-sm">
-                                      No correlation data available
+                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl">
+                    <CardHeader className="py-3 px-4">
+                      <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
+                        <Grid className="w-3.5 h-3.5 mr-2 text-indigo-400" />
+                        Correlation Matrix
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 flex items-center justify-center h-[300px]">
+                      <div className="overflow-x-auto w-full custom-scrollbar">
+                        <table className="w-full text-[11px] text-center">
+                          <thead>
+                            <tr>
+                              <th className="p-2 text-left text-slate-400 font-medium min-w-[100px]">策略</th>
+                              {STRATEGY_CONFIG.map(s => (
+                                <th key={s.name} className="p-2 text-slate-400 font-medium whitespace-nowrap">
+                                  {s.displayName || s.name}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {correlationMatrix && correlationMatrix.length > 0 ? (
+                              correlationMatrix.map((row, i) => {
+                                const rowConfig = STRATEGY_CONFIG.find(s => s.name === row.name);
+                                return (
+                                  <tr key={row.name}>
+                                    <td className="p-2 text-slate-400 font-medium text-left whitespace-nowrap">
+                                      {rowConfig?.displayName || row.name}
                                     </td>
+                                    {STRATEGY_CONFIG.map(col => {
+                                      const val = row[col.name];
+                                      let bgClass = '';
+                                      let textClass = 'text-slate-300';
+                                      if (val === 1) { bgClass = 'bg-white/10'; textClass='text-slate-600'; }
+                                      else if (val > 0.5) { bgClass = 'bg-rose-900/40'; textClass='text-rose-300'; } 
+                                      else if (val < 0) { bgClass = 'bg-emerald-900/40'; textClass='text-emerald-300'; } 
+                                      else { bgClass = 'bg-white/5'; }
+                                      return (
+                                        <td key={col.name} className={`p-2 border border-white/10 ${bgClass} ${textClass}`}>
+                                          {val.toFixed(2)}
+                                        </td>
+                                      );
+                                    })}
                                   </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-slate-500 border border-dashed border-white/10 rounded-lg bg-white/5 backdrop-blur-sm">
-                      <p className="text-xs">Switch to Portfolio view for aggregate analysis</p>
-                    </div>
-                  )}
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={STRATEGY_CONFIG.length + 1} className="p-4 text-center text-slate-500 text-sm">
+                                  No correlation data available
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               ) : (
                 <div className="h-[400px] p-6 overflow-auto custom-scrollbar">
