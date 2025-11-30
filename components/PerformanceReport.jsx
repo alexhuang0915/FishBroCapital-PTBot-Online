@@ -508,24 +508,30 @@ export default function PerformanceDashboard() {
     const dataSource = rawDataBundle;
     
     if (isPortfolio) {
-      // For portfolio, aggregate trades from all strategies (already in TWD)
+      // For portfolio, aggregate trades from all strategies with position size scaling applied
       if (dataSource?.trades) {
         STRATEGY_CONFIG.forEach(cfg => {
           const strategyTrades = dataSource.trades[cfg.name] || [];
-          // Trades are already in TWD, no conversion needed
-          allTradesTWD.push(...strategyTrades);
+          const positionSize = positionSizes[cfg.name] || 1;
+          // Apply position size scaling to each trade's PnL
+          strategyTrades.forEach(trade => {
+            allTradesTWD.push({
+              ...trade,
+              pnl: (trade.pnl || 0) * positionSize // Scale PnL by position size
+            });
+          });
         });
         totalTrades = allTradesTWD.length;
         wins = allTradesTWD.filter(t => t.pnl > 0);
         losses = allTradesTWD.filter(t => t.pnl <= 0);
         winRate = totalTrades > 0 ? (wins.length / totalTrades) * 100 : 0;
       } else {
-        // Fallback to daily data if trades not available
+        // Fallback to daily data if trades not available (already scaled)
         totalTrades = processedData.length;
         wins = processedData.filter(d => d.pnl > 0);
         losses = processedData.filter(d => d.pnl <= 0);
         winRate = (wins.length / totalTrades) * 100;
-        // For SQN fallback, use daily PnL
+        // For SQN fallback, use daily PnL (already scaled)
         allTradesTWD = processedData.map(d => ({ pnl: d.pnl }));
       }
     } else {
@@ -607,7 +613,7 @@ export default function PerformanceDashboard() {
       dataWithDD: processedData,
       symbol: currentViewContext.symbol
     };
-  }, [currentViewContext, rawDataBundle, selectedStrategy, initialEquity]);
+  }, [currentViewContext, rawDataBundle, selectedStrategy, initialEquity, positionSizes]);
 
   // --- 2.5 Monthly Returns Logic ---
   const monthlyReturns = useMemo(() => {
@@ -817,18 +823,18 @@ export default function PerformanceDashboard() {
               <div className="flex flex-wrap gap-2 bg-white/5 backdrop-blur-md p-2 rounded-lg border border-white/10">
                 <div className="flex items-center gap-1.5">
                   <label className="text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">初始資金:</label>
-                  <input
-                    type="number"
+                  <select
                     value={initialEquity}
                     onChange={(e) => {
                       const value = parseInt(e.target.value) || 5000000;
                       setInitialEquity(value);
                     }}
-                    className="bg-white/10 border border-white/20 rounded px-2 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-24 sm:w-32"
-                    min="100000"
-                    step="100000"
-                  />
-                  <span className="text-[9px] sm:text-[10px] text-slate-500">NT$</span>
+                    className="bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg px-2 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 shadow-lg transition-all"
+                  >
+                    {[1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000, 8000000, 9000000, 10000000].map(val => (
+                      <option key={val} value={val} className="bg-[#0f172a]">NT$ {val.toLocaleString()}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="w-px h-6 bg-white/10 mx-1"></div>
                 <span className="text-[10px] sm:text-xs text-slate-400 font-medium self-center">口數設定:</span>
@@ -843,10 +849,10 @@ export default function PerformanceDashboard() {
                         newSizes[s.name] = parseInt(e.target.value) || 1;
                         setPositionSizes(newSizes);
                       }}
-                      className="bg-white/10 border border-white/20 rounded px-1.5 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-w-[50px]"
+                      className="bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg px-1.5 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 shadow-lg transition-all min-w-[50px]"
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                        <option key={num} value={num}>{num}</option>
+                        <option key={num} value={num} className="bg-[#0f172a]">{num}</option>
                       ))}
                     </select>
                   </div>
@@ -1368,6 +1374,14 @@ export default function PerformanceDashboard() {
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.3); 
+        }
+        /* Dark dropdown styling to match hint tooltip */
+        select option {
+          background: #0f172a;
+          color: #e2e8f0;
+        }
+        select:focus {
+          border-color: rgba(99, 102, 241, 0.5);
         }
       `}</style>
     </div>
