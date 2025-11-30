@@ -234,6 +234,7 @@ export default function PerformanceDashboard() {
               rawPortfolioData: result.rawPortfolioData // Preprocessed portfolio data
             });
             setDataError(null);
+            setIsLoading(false);
           } else {
             // Fallback: Convert raw CSV data to TWD (for development)
             const strategiesDataTWD = {};
@@ -320,6 +321,7 @@ export default function PerformanceDashboard() {
               })
             });
             setDataError(null);
+            setIsLoading(false);
           }
         } else {
           throw new Error('Failed to load strategies data');
