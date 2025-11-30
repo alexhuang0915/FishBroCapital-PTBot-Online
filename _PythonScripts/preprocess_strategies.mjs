@@ -25,9 +25,9 @@ const STRATEGY_CONFIG = [
   { name: 'MNQ_DX_60', originalCurrency: 'USD', color: '#06b6d4', icon: 'NT$', displayName: 'MNQ DX 60' },
   { name: 'MNQ_VIX_120', originalCurrency: 'USD', color: '#3b82f6', icon: 'NT$', displayName: 'MNQ VIX 120' },
   { name: 'MNQ_VIX_60', originalCurrency: 'USD', color: '#10b981', icon: 'NT$', displayName: 'MNQ VIX 60' },
-  { name: 'TXF_DX_60', originalCurrency: 'TWD', color: '#ec4899', icon: 'NT$', displayName: 'TXF DX 60' },
-  { name: 'TXF_VIX_120', originalCurrency: 'TWD', color: '#f59e0b', icon: 'NT$', displayName: 'TXF VIX 120' },
-  { name: 'TXF_VIX_60', originalCurrency: 'TWD', color: '#8b5cf6', icon: 'NT$', displayName: 'TXF VIX 60' },
+  { name: 'MXF_DX_60', originalCurrency: 'TWD', color: '#ec4899', icon: 'NT$', displayName: 'MXF DX 60' },
+  { name: 'MXF_VIX_120', originalCurrency: 'TWD', color: '#f59e0b', icon: 'NT$', displayName: 'MXF VIX 120' },
+  { name: 'MXF_VIX_60', originalCurrency: 'TWD', color: '#8b5cf6', icon: 'NT$', displayName: 'MXF VIX 60' },
 ];
 
 async function preprocessStrategies() {
