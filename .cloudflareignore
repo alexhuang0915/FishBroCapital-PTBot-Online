@@ -1,0 +1,12 @@
+# Cloudflare Pages ignore file
+# Exclude files and directories from deployment
+
+# Next.js cache - not needed for deployment
+.next/cache/
+
+# Large build artifacts
+.next/cache/webpack/
+
+# Other cache files
+.next/cache/**/*
+
