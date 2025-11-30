@@ -14,8 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
   BarChart,
-  Bar,
-  Brush
+  Bar
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { 
