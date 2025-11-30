@@ -1143,7 +1143,7 @@ export default function PerformanceDashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 0}} axisLine={false} tickLine={false} height={1} />
+                      <XAxis dataKey="date" minTickGap={50} tick={{fontSize: 10, fill: '#94a3b8'}} axisLine={false} tickLine={false} />
                       <YAxis 
                         yAxisId="equity" 
                         domain={['auto', 'auto']} 
