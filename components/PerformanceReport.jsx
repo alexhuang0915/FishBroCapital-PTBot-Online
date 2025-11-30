@@ -1133,7 +1133,7 @@ export default function PerformanceDashboard() {
             <CardContent className="p-0">
               {chartView === 'equity' ? (
                 <div className="h-[500px] sm:h-[600px] p-4 flex flex-col">
-                  {/* Combined Equity and Drawdown Chart */}
+                  {/* Combined Equity and Drawdown Chart - Single Chart */}
                   <div className="flex-[2] p-2 sm:p-4 pb-0 relative min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={stats.dataWithDD} syncId="strategyChart" margin={{ top: 10, right: 5, left: 40, bottom: 5 }}>
