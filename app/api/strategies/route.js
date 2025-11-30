@@ -3,13 +3,12 @@ import { NextResponse } from 'next/server';
 // Edge Runtime 配置
 export const runtime = 'edge';
 
-export async function GET() {
+export async function GET(request) {
   try {
     // 在 Edge Runtime 中，使用 fetch 讀取 public 目錄的靜態文件
     // 構建時，public/data/strategies.json 會被複製到輸出目錄
-    // 在 Cloudflare Pages 上，我們需要構建時的絕對 URL
-    const requestUrl = request.headers.get('referer') || request.url;
-    const url = new URL(requestUrl);
+    // 在 Cloudflare Pages 上，我們需要從請求中獲取 base URL
+    const url = new URL(request.url);
     const baseUrl = `${url.protocol}//${url.host}`;
     const jsonUrl = `${baseUrl}/data/strategies.json`;
     
