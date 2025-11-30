@@ -1,38 +1,66 @@
 import { NextResponse } from 'next/server';
 import { loadAllStrategies } from '@/lib/excelParser';
 import path from 'path';
-import { readdir } from 'fs/promises';
-import { existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 
 export async function GET() {
   try {
-    // Get the base path (current working directory)
     const basePath = process.cwd();
-    console.log('Base path:', basePath);
+    const preprocessedPath = path.join(basePath, 'public', 'data', 'strategies.json');
     
-    // Search in both root directory and public/data directory
+    // Try to load preprocessed JSON first (faster)
+    if (existsSync(preprocessedPath)) {
+      try {
+        console.log('Loading preprocessed data from:', preprocessedPath);
+        const fileContent = readFileSync(preprocessedPath, 'utf8');
+        const preprocessedData = JSON.parse(fileContent);
+        
+        // Convert to the expected format
+        const strategies = {};
+        Object.keys(preprocessedData.strategies).forEach(name => {
+          strategies[name] = {
+            data: preprocessedData.strategies[name],
+            trades: preprocessedData.trades[name] || [],
+            startEquity: 1000000
+          };
+        });
+        
+        console.log('✓ Loaded preprocessed data:', Object.keys(strategies));
+        return NextResponse.json({ 
+          success: true, 
+          strategies,
+          rawPortfolioData: preprocessedData.rawPortfolioData || [],
+          preprocessed: true,
+          metadata: preprocessedData.metadata
+        });
+      } catch (jsonError) {
+        console.warn('Failed to load preprocessed data, falling back to CSV:', jsonError.message);
+      }
+    }
+    
+    // Fallback: Load from CSV files (slower, for development)
+    console.log('Loading from CSV files...');
     const publicDataPath = path.join(basePath, 'public', 'data');
     const searchPaths = [basePath, publicDataPath];
     
-    // Load all strategies from CSV/Excel files
     const strategies = loadAllStrategies(basePath, searchPaths);
     
-    // Check if we have any data
     const hasData = Object.keys(strategies).some(name => strategies[name].data.length > 0);
     
     if (!hasData) {
-      console.warn('No strategy data found. Make sure CSV files are in the root directory.');
+      console.warn('No strategy data found. Run preprocessing script first: npm run preprocess');
+      return NextResponse.json(
+        { success: false, error: 'No data found. Please run preprocessing script: npm run preprocess' },
+        { status: 404 }
+      );
     }
     
-    // Log summary
-    console.log('Loaded strategies:', Object.keys(strategies));
-    Object.keys(strategies).forEach(name => {
-      console.log(`  ${name}: ${strategies[name].data.length} days, ${strategies[name].trades?.length || 0} trades`);
-    });
+    console.log('Loaded strategies from CSV:', Object.keys(strategies));
     
     return NextResponse.json({ 
       success: true, 
-      strategies 
+      strategies,
+      preprocessed: false
     });
   } catch (error) {
     console.error('Error loading strategies:', error);

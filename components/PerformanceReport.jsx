@@ -212,91 +212,115 @@ export default function PerformanceDashboard() {
         if (timeoutId) clearTimeout(timeoutId);
         
         if (result.success && result.strategies) {
-          // Convert ALL raw data to TWD first, before any calculations
-          const strategiesDataTWD = {};
-          const strategiesTradesTWD = {};
-          const allDates = new Set();
-          
-          // Step 1: Convert all strategies data and trades to TWD
-          Object.keys(result.strategies).forEach(strategyName => {
-            const strategy = result.strategies[strategyName];
-            const config = STRATEGY_CONFIG.find(c => c.name === strategyName);
-            const originalCurrency = config?.originalCurrency || 'USD';
-            const rate = RATES[originalCurrency];
+          // Check if data is preprocessed (already in TWD and normalized)
+          if (result.preprocessed && result.rawPortfolioData) {
+            // Use preprocessed data directly (much faster!)
+            const strategiesDataTWD = {};
+            const strategiesTradesTWD = {};
+            const allDates = new Set();
             
-            // Convert daily data to TWD and normalize to 1,000,000 TWD starting equity
-            const targetStartEquity = 1000000; // All strategies start with 1,000,000 TWD
-            
-            // Get the first data point's starting equity (before first PnL) in TWD
-            const firstDataPoint = strategy.data[0];
-            const firstStartEquityTWD = firstDataPoint ? (firstDataPoint.equity - firstDataPoint.pnl) * rate : targetStartEquity;
-            
-            // Calculate offset to normalize to target starting equity
-            const equityOffset = targetStartEquity - firstStartEquityTWD;
-            
-            const convertedData = strategy.data.map((d, i) => {
-              const pnlTWD = d.pnl * rate;
-              // Calculate equity in TWD and add offset to normalize
-              const originalEquityTWD = d.equity * rate;
-              const equityTWD = originalEquityTWD + equityOffset;
-              
-              return {
-                ...d,
-                id: i + 1,
-                pnl: pnlTWD, // Convert to TWD
-                equity: equityTWD, // Normalized to start from 1,000,000 TWD
-                currency: 'TWD' // All data is now TWD
-              };
+            Object.keys(result.strategies).forEach(strategyName => {
+              const strategy = result.strategies[strategyName];
+              strategiesDataTWD[strategyName] = strategy.data; // Already in TWD
+              strategiesTradesTWD[strategyName] = strategy.trades || []; // Already in TWD
+              strategy.data.forEach(d => allDates.add(d.date));
             });
             
-            strategiesDataTWD[strategyName] = convertedData;
-            convertedData.forEach(d => allDates.add(d.date));
-            
-            // Convert trades to TWD
-            const convertedTrades = (strategy.trades || []).map(trade => ({
-              ...trade,
-              pnl: trade.pnl * rate // Convert to TWD
-            }));
-            
-            strategiesTradesTWD[strategyName] = convertedTrades;
-          });
-          
-          const sortedDates = Array.from(allDates).sort();
-          
-          // Step 2: Build portfolio data from TWD data
-          const strategyDataMaps = {};
-          Object.keys(strategiesDataTWD).forEach(strategyName => {
-            const dataMap = new Map();
-            strategiesDataTWD[strategyName].forEach(d => {
-              dataMap.set(d.date, d);
+            // Use preprocessed rawPortfolioData
+            setRawDataBundle({ 
+              strategies: strategiesDataTWD, // All in TWD (preprocessed)
+              portfolio: [], // Will be calculated in useMemo with position sizes
+              trades: strategiesTradesTWD, // All in TWD (preprocessed)
+              rawPortfolioData: result.rawPortfolioData // Preprocessed portfolio data
             });
-            strategyDataMaps[strategyName] = dataMap;
-          });
-          
-          // Store raw data without position size scaling
-          setRawDataBundle({ 
-            strategies: strategiesDataTWD, // All in TWD
-            portfolio: [], // Will be calculated in useMemo with position sizes
-            trades: strategiesTradesTWD, // All in TWD
-            rawPortfolioData: sortedDates.map((date, i) => {
-              const dayStats = { 
-                date, 
-                year: new Date(date).getFullYear(), 
-                month: new Date(date).getMonth() + 1 
-              };
+            setDataError(null);
+          } else {
+            // Fallback: Convert raw CSV data to TWD (for development)
+            const strategiesDataTWD = {};
+            const strategiesTradesTWD = {};
+            const allDates = new Set();
+            
+            // Step 1: Convert all strategies data and trades to TWD
+            Object.keys(result.strategies).forEach(strategyName => {
+              const strategy = result.strategies[strategyName];
+              const config = STRATEGY_CONFIG.find(c => c.name === strategyName);
+              const originalCurrency = config?.originalCurrency || 'USD';
+              const rate = RATES[originalCurrency];
               
-              STRATEGY_CONFIG.forEach(cfg => {
-                const sData = strategyDataMaps[cfg.name]?.get(date);
-                if (sData) {
-                  dayStats[`pnl_${cfg.name}`] = sData.pnl;
-                  dayStats[`pnlTWD_${cfg.name}`] = sData.pnl;
-                }
+              // Convert daily data to TWD and normalize to 1,000,000 TWD starting equity
+              const targetStartEquity = 1000000; // All strategies start with 1,000,000 TWD
+              
+              // Get the first data point's starting equity (before first PnL) in TWD
+              const firstDataPoint = strategy.data[0];
+              const firstStartEquityTWD = firstDataPoint ? (firstDataPoint.equity - firstDataPoint.pnl) * rate : targetStartEquity;
+              
+              // Calculate offset to normalize to target starting equity
+              const equityOffset = targetStartEquity - firstStartEquityTWD;
+              
+              const convertedData = strategy.data.map((d, i) => {
+                const pnlTWD = d.pnl * rate;
+                // Calculate equity in TWD and add offset to normalize
+                const originalEquityTWD = d.equity * rate;
+                const equityTWD = originalEquityTWD + equityOffset;
+                
+                return {
+                  ...d,
+                  id: i + 1,
+                  pnl: pnlTWD, // Convert to TWD
+                  equity: equityTWD, // Normalized to start from 1,000,000 TWD
+                  currency: 'TWD' // All data is now TWD
+                };
               });
               
-              return dayStats;
-            })
-          });
-          setDataError(null);
+              strategiesDataTWD[strategyName] = convertedData;
+              convertedData.forEach(d => allDates.add(d.date));
+              
+              // Convert trades to TWD
+              const convertedTrades = (strategy.trades || []).map(trade => ({
+                ...trade,
+                pnl: trade.pnl * rate // Convert to TWD
+              }));
+              
+              strategiesTradesTWD[strategyName] = convertedTrades;
+            });
+            
+            const sortedDates = Array.from(allDates).sort();
+            
+            // Step 2: Build portfolio data from TWD data
+            const strategyDataMaps = {};
+            Object.keys(strategiesDataTWD).forEach(strategyName => {
+              const dataMap = new Map();
+              strategiesDataTWD[strategyName].forEach(d => {
+                dataMap.set(d.date, d);
+              });
+              strategyDataMaps[strategyName] = dataMap;
+            });
+            
+            // Store raw data without position size scaling
+            setRawDataBundle({ 
+              strategies: strategiesDataTWD, // All in TWD
+              portfolio: [], // Will be calculated in useMemo with position sizes
+              trades: strategiesTradesTWD, // All in TWD
+              rawPortfolioData: sortedDates.map((date, i) => {
+                const dayStats = { 
+                  date, 
+                  year: new Date(date).getFullYear(), 
+                  month: new Date(date).getMonth() + 1 
+                };
+                
+                STRATEGY_CONFIG.forEach(cfg => {
+                  const sData = strategyDataMaps[cfg.name]?.get(date);
+                  if (sData) {
+                    dayStats[`pnl_${cfg.name}`] = sData.pnl;
+                    dayStats[`pnlTWD_${cfg.name}`] = sData.pnl;
+                  }
+                });
+                
+                return dayStats;
+              })
+            });
+            setDataError(null);
+          }
         } else {
           throw new Error('Failed to load strategies data');
         }
