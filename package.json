@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/clean-build.js",
-    "pages:build": "npx @cloudflare/next-on-pages@1",
+    "pages:build": "npm run build && npx @cloudflare/next-on-pages@1",
     "build:cloudflare": "npx @cloudflare/next-on-pages@1",
     "postbuild": "node scripts/clean-build.js",
     "start": "next start",
