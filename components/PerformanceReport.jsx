@@ -14,7 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
   BarChart,
-  Bar
+  Bar,
+  Brush
 } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { 
@@ -1123,6 +1124,23 @@ export default function PerformanceDashboard() {
                         <Tooltip content={<CompactTooltip symbol={stats.symbol} />} cursor={{stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4'}} />
                         <Area type="monotone" dataKey="equity" stroke="#818cf8" strokeWidth={2} fill="url(#colorEquity)" animationDuration={1000} />
                         <Line type="monotone" dataKey="sma60" stroke="#fbbf24" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} strokeDasharray="4 4" name="60 SMA" />
+                        <Brush 
+                          dataKey="date" 
+                          height={25}
+                          stroke="#6366f1"
+                          fill="rgba(99, 102, 241, 0.15)"
+                          strokeWidth={1.5}
+                          tickFormatter={(value) => {
+                            if (!value) return '';
+                            try {
+                              const date = new Date(value);
+                              return `${date.getMonth() + 1}/${date.getDate()}`;
+                            } catch {
+                              return value;
+                            }
+                          }}
+                          style={{ cursor: 'grab' }}
+                        />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
