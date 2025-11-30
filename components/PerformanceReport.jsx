@@ -1169,6 +1169,7 @@ export default function PerformanceDashboard() {
                           <ReferenceLine 
                             key={`year-boundary-${idx}`} 
                             x={date} 
+                            yAxisId="equity"
                             stroke="rgba(148, 163, 184, 0.3)" 
                             strokeWidth={1} 
                             strokeDasharray="2 2"
