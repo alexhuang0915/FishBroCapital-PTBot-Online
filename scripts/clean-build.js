@@ -19,6 +19,35 @@ if (fs.existsSync(CACHE_DIR)) {
   console.log('No cache directory found');
 }
 
+// Also remove webpack cache files that might be outside cache directory
+const WEBPACK_CACHE_DIRS = [
+  path.join(NEXT_DIR, 'cache', 'webpack'),
+  path.join(NEXT_DIR, 'server'),
+  path.join(NEXT_DIR, 'static', 'chunks')
+];
+
+WEBPACK_CACHE_DIRS.forEach(dir => {
+  if (fs.existsSync(dir)) {
+    // Check for large files in these directories
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      entries.forEach(entry => {
+        if (entry.isFile()) {
+          const fullPath = path.join(dir, entry.name);
+          const stats = fs.statSync(fullPath);
+          // Remove files larger than 20MB
+          if (stats.size > 20 * 1024 * 1024) {
+            console.log(`Removing large file: ${fullPath} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+            fs.unlinkSync(fullPath);
+          }
+        }
+      });
+    } catch (err) {
+      // Ignore errors
+    }
+  }
+});
+
 // Check for large files in .next directory
 function checkLargeFiles(dir, maxSize = 25 * 1024 * 1024) {
   let found = false;
