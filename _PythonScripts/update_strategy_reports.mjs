@@ -39,22 +39,6 @@ const STRATEGY_CONFIG = [
     filePattern: 'CME.MNQ HOT  MNQ_VIX_120 策略回測績效報告.xlsx'
   },
   { 
-    name: 'MNQ_VIX_60', 
-    originalCurrency: 'USD', 
-    color: '#10b981', 
-    icon: 'NT$', 
-    displayName: 'MNQ VIX 60',
-    filePattern: 'CME.MNQ HOT  MNQ_VIX_60 策略回測績效報告.xlsx'
-  },
-  { 
-    name: 'MXF_DX_60', 
-    originalCurrency: 'TWD', 
-    color: '#ec4899', 
-    icon: 'NT$', 
-    displayName: 'MXF DX 60',
-    filePattern: 'TWF.MXF HOT  MXF_DX_60 策略回測績效報告.xlsx'
-  },
-  { 
     name: 'MXF_VIX_120', 
     originalCurrency: 'TWD', 
     color: '#f59e0b', 
