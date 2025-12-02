@@ -143,7 +143,7 @@ const generatePortfolio = () => {
       dayStats[`pnlTWD_${cfg.name}`] = sData.pnl; // Same value, already TWD
     });
 
-    const prevEquity = i === 0 ? 5000000 : portfolioData[i-1].equity;
+    const prevEquity = i === 0 ? 2000000 : portfolioData[i-1].equity;
     const currentEquity = prevEquity + dailyTotalPnlTWD;
     
     portfolioData.push({
@@ -165,17 +165,30 @@ export default function PerformanceDashboard() {
   const [chartView, setChartView] = useState('equity'); // 'equity', 'heatmap', 'analysis' 
   const [imgError, setImgError] = useState(false);
   
-  // Position sizes for each strategy (default 1 contract)
+  // Position sizes for each strategy (default based on portfolio configuration)
   const [positionSizes, setPositionSizes] = useState(() => {
     const sizes = {};
     STRATEGY_CONFIG.forEach(cfg => {
-      sizes[cfg.name] = 1;
+      // Default position sizes based on portfolio configuration:
+      // MNQ: DX60 (攻撃) = 5, VIX120 (防守) = 3
+      // MXF: VIX120 (主力) = 6, VIX60 (輔助) = 1
+      if (cfg.name === 'MNQ_DX_60') {
+        sizes[cfg.name] = 5;
+      } else if (cfg.name === 'MNQ_VIX_120') {
+        sizes[cfg.name] = 3;
+      } else if (cfg.name === 'MXF_VIX_120') {
+        sizes[cfg.name] = 6;
+      } else if (cfg.name === 'MXF_VIX_60') {
+        sizes[cfg.name] = 1;
+      } else {
+        sizes[cfg.name] = 1; // Fallback
+      }
     });
     return sizes;
   });
   
-  // Initial equity for Portfolio (default 5,000,000 TWD)
-  const [initialEquity, setInitialEquity] = useState(5000000);
+  // Initial equity for Portfolio (default 2,000,000 TWD = 200萬)
+  const [initialEquity, setInitialEquity] = useState(2000000);
   
   // Data loading states - use null initially to prevent hydration mismatch
   const [rawDataBundle, setRawDataBundle] = useState(null);
@@ -851,7 +864,7 @@ export default function PerformanceDashboard() {
                   <select
                     value={initialEquity}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value) || 5000000;
+                      const value = parseInt(e.target.value) || 2000000;
                       setInitialEquity(value);
                     }}
                     className="bg-[#0f172a]/95 backdrop-blur-xl border border-indigo-500/30 rounded-lg px-2 py-0.5 text-[10px] sm:text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 shadow-lg transition-all"
