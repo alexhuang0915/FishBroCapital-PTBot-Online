@@ -105,12 +105,12 @@ async function updateStrategyReports() {
   });
   
   if (missingFiles.length > 0) {
-    console.error(`\n❌ 錯誤：缺少以下文件：`);
-    missingFiles.forEach(file => console.error(`  - ${file}`));
-    process.exit(1);
+    console.warn(`\n⚠️  警告：缺少以下文件：`);
+    missingFiles.forEach(file => console.warn(`  - ${file}`));
+    console.warn(`將繼續處理現有的 ${STRATEGY_CONFIG.length - missingFiles.length} 個策略文件...\n`);
+  } else {
+    console.log('\n所有文件檢查通過！\n');
   }
-  
-  console.log('\n所有文件檢查通過！\n');
   
   // 使用 loadAllStrategies 但指定策略報告目錄
   console.log('開始解析策略數據...\n');
@@ -137,7 +137,13 @@ async function updateStrategyReports() {
   const strategiesTradesTWD = {};
   const allDates = new Set();
   
-  STRATEGY_CONFIG.forEach(config => {
+  // 只處理存在的策略文件
+  const existingStrategies = STRATEGY_CONFIG.filter(config => {
+    const filePath = path.join(reportsPath, config.filePattern);
+    return fs.existsSync(filePath);
+  });
+  
+  existingStrategies.forEach(config => {
     const strategy = strategies[config.name];
     if (!strategy || !strategy.data || strategy.data.length === 0) {
       console.log(`  ⚠️  跳過 ${config.name}：無數據`);
@@ -204,7 +210,8 @@ async function updateStrategyReports() {
       month: new Date(date).getMonth() + 1 
     };
     
-    STRATEGY_CONFIG.forEach(cfg => {
+    // 只處理存在的策略
+    existingStrategies.forEach(cfg => {
       const sData = strategyDataMaps[cfg.name]?.get(date);
       if (sData) {
         dayStats[`pnl_${cfg.name}`] = sData.pnl;
