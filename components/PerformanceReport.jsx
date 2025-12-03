@@ -410,11 +410,36 @@ export default function PerformanceDashboard() {
       const strategyData = rawDataBundle.strategies?.[selectedStrategy] || [];
       
       return { 
-        data: strategyData.map((d, i) => ({
-          ...d,
-          id: d.id || i + 1,
-          drawdown: 0
-        })), 
+        data: strategyData.map((d, i) => {
+          // Extract year and month from date if not present
+          let year = d.year;
+          let month = d.month;
+          if (!year || !month) {
+            try {
+              const date = new Date(d.date);
+              if (!isNaN(date.getTime())) {
+                year = year || date.getFullYear();
+                month = month || (date.getMonth() + 1);
+              }
+            } catch (e) {
+              // If date parsing fails, try to extract from string
+              if (d.date && typeof d.date === 'string') {
+                const parts = d.date.split('-');
+                if (parts.length >= 2) {
+                  year = year || parseInt(parts[0]);
+                  month = month || parseInt(parts[1]);
+                }
+              }
+            }
+          }
+          return {
+            ...d,
+            id: d.id || i + 1,
+            drawdown: 0,
+            year,
+            month
+          };
+        }), 
         currency: 'TWD', // All data is in TWD
         symbol: 'NT$',
         isPortfolio: false
