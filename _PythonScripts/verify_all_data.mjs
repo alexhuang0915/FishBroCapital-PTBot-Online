@@ -8,12 +8,20 @@ const __dirname = path.dirname(__filename);
 
 // 策略配置
 const STRATEGY_CONFIG = [
+  // MNQ Strategies (USD)
   { name: 'MNQ_DX_120', file: 'CME.MNQ HOT  MNQ_DX_120_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
   { name: 'MNQ_VIX_60', file: 'CME.MNQ HOT  MNQ_VIX_60_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
   { name: 'MNQ_VIX_120', file: 'CME.MNQ HOT  MNQ_VIX_120_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
   { name: 'MNQ_ZN_120', file: 'CME.MNQ HOT  MNQ_ZN_120_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
   { name: 'MNQ_6J_60', file: 'CME.MNQ HOT  MNQ_6J_60_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
   { name: 'MNQ_6J_120', file: 'CME.MNQ HOT  MNQ_6J_120_BackTest 策略回測績效報告.xlsx', currency: 'USD' },
+  // MXF Strategies (TWD)
+  { name: 'MXF_VIX_120', file: 'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
+  { name: 'MXF_VIX_60', file: 'TWF.MXF HOT  MXF_VIX_60_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
+  { name: 'MXF_ZN_120', file: 'TWF.MXF HOT  MXF_ZN_120_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
+  { name: 'MXF_6J_60', file: 'TWF.MXF HOT  MXF_6J_60_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
+  { name: 'MXF_DX_60', file: 'TWF.MXF HOT  MXF_DX_60_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
+  { name: 'MXF_DX_120', file: 'TWF.MXF HOT  MXF_DX_120_BackTest 策略回測績效報告.xlsx', currency: 'TWD' },
 ];
 
 const reportsPath = path.join(__dirname, '..', '..', '策略報告');

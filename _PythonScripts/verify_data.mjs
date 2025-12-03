@@ -59,6 +59,7 @@ Object.keys(data.strategies).forEach(name => {
 // 3. 匯率轉換驗證（MNQ 策略應該是 TWD）
 console.log('\n【3. 匯率轉換驗證】');
 const mnqStrategies = ['MNQ_DX_120', 'MNQ_VIX_60', 'MNQ_VIX_120', 'MNQ_ZN_120', 'MNQ_6J_60', 'MNQ_6J_120'];
+const mxfStrategies = ['MXF_VIX_120', 'MXF_VIX_60', 'MXF_ZN_120', 'MXF_6J_60', 'MXF_DX_60', 'MXF_DX_120'];
 mnqStrategies.forEach(name => {
   const s = data.strategies[name];
   if (s && s.length > 0) {

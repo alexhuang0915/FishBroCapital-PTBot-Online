@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const STRATEGY_CONFIG = [
+  // MNQ Strategies (USD)
   { 
     name: 'MNQ_DX_120', 
     originalCurrency: 'USD', 
@@ -71,6 +72,73 @@ const STRATEGY_CONFIG = [
     filePatterns: [
       'CME.MNQ HOT  MNQ_6J_120_BackTest 策略回測績效報告.xlsx',
       'CME.MNQ HOT  MNQ_6J_120 策略回測績效報告.xlsx'
+    ]
+  },
+  // MXF Strategies (TWD)
+  { 
+    name: 'MXF_VIX_120', 
+    originalCurrency: 'TWD', 
+    color: '#8b5cf6', 
+    icon: 'NT$', 
+    displayName: 'MXF VIX 120',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MXF_VIX_60', 
+    originalCurrency: 'TWD', 
+    color: '#a855f7', 
+    icon: 'NT$', 
+    displayName: 'MXF VIX 60',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_VIX_60_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_VIX_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MXF_ZN_120', 
+    originalCurrency: 'TWD', 
+    color: '#9333ea', 
+    icon: 'NT$', 
+    displayName: 'MXF ZN 120',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_ZN_120_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_ZN_120 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MXF_6J_60', 
+    originalCurrency: 'TWD', 
+    color: '#7c3aed', 
+    icon: 'NT$', 
+    displayName: 'MXF 6J 60',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_6J_60_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_6J_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MXF_DX_60', 
+    originalCurrency: 'TWD', 
+    color: '#6d28d9', 
+    icon: 'NT$', 
+    displayName: 'MXF DX 60',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_DX_60_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_DX_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MXF_DX_120', 
+    originalCurrency: 'TWD', 
+    color: '#5b21b6', 
+    icon: 'NT$', 
+    displayName: 'MXF DX 120',
+    filePatterns: [
+      'TWF.MXF HOT  MXF_DX_120_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_DX_120 策略回測績效報告.xlsx'
     ]
   },
 ];
