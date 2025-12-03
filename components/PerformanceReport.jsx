@@ -170,7 +170,7 @@ const defaultDataBundle = generatePortfolio();
 
 export default function PerformanceDashboard() {
   const [selectedStrategy, setSelectedStrategy] = useState('Portfolio'); 
-  const [chartView, setChartView] = useState('equity'); // 'equity', 'heatmap', 'analysis' 
+  const [chartView, setChartView] = useState('equity'); // 'equity', 'heatmap', 'contribution', 'correlation' 
   const [imgError, setImgError] = useState(false);
   
   // Position sizes for each strategy (default based on portfolio configuration)
@@ -698,7 +698,7 @@ export default function PerformanceDashboard() {
     const years = Object.keys(map).sort().reverse();
     
     return { years, months, map, winRateMap };
-  }, [currentViewContext]);
+  }, [currentViewContext, positionSizes]);
 
 
   // --- 3. Portfolio Correlation (TWD Basis) ---
@@ -1127,13 +1127,22 @@ export default function PerformanceDashboard() {
                       Heatmap
                     </button>
                     {selectedStrategy === 'Portfolio' && (
-                      <button 
-                        onClick={() => setChartView('analysis')}
-                        className={`flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'analysis' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
-                      >
-                        <PieIcon className="w-3 h-3 mr-1.5" />
-                        Analysis
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => setChartView('contribution')}
+                          className={`flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'contribution' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                        >
+                          <PieIcon className="w-3 h-3 mr-1.5" />
+                          Contribution
+                        </button>
+                        <button 
+                          onClick={() => setChartView('correlation')}
+                          className={`flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'correlation' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'}`}
+                        >
+                          <Grid className="w-3 h-3 mr-1.5" />
+                          Correlation
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1209,16 +1218,16 @@ export default function PerformanceDashboard() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
-              ) : chartView === 'analysis' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl">
+              ) : chartView === 'contribution' ? (
+                <div className="h-[500px] sm:h-[600px] p-4 flex items-center justify-center">
+                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl w-full h-full">
                     <CardHeader className="py-3 px-4">
                       <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
                         <BarChart3 className="w-3.5 h-3.5 mr-2 text-indigo-400" />
                         PnL Contribution ({currentViewContext.currency})
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[300px] flex items-center justify-center -mt-2">
+                    <CardContent className="h-[calc(100%-60px)] flex items-center justify-center">
                       {contributionData && contributionData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
@@ -1227,7 +1236,7 @@ export default function PerformanceDashboard() {
                               cx="50%"
                               cy="50%"
                               innerRadius={0}
-                              outerRadius={80}
+                              outerRadius={120}
                               paddingAngle={2}
                               dataKey="value"
                               stroke="none"
@@ -1237,7 +1246,7 @@ export default function PerformanceDashboard() {
                               ))}
                             </Pie>
                             <Tooltip content={<CompactTooltip symbol="NT$" />} />
-                            <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '11px', right: 20, color: '#94a3b8' }} />
+                            <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '12px', right: 20, color: '#94a3b8' }} />
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
@@ -1245,20 +1254,22 @@ export default function PerformanceDashboard() {
                       )}
                     </CardContent>
                   </Card>
-
-                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl">
+                </div>
+              ) : chartView === 'correlation' ? (
+                <div className="h-[500px] sm:h-[600px] p-4 flex items-center justify-center">
+                  <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-2xl w-full h-full">
                     <CardHeader className="py-3 px-4">
                       <CardTitle className="text-slate-200 flex items-center text-xs font-medium">
                         <Grid className="w-3.5 h-3.5 mr-2 text-indigo-400" />
                         Correlation Matrix
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 flex items-center justify-center h-[300px]">
+                    <CardContent className="p-4 flex items-center justify-center h-[calc(100%-60px)] overflow-auto">
                       <div className="overflow-x-auto w-full custom-scrollbar">
                         <table className="w-full text-[11px] text-center">
                           <thead>
                             <tr>
-                              <th className="p-2 text-left text-slate-400 font-medium min-w-[100px]">策略</th>
+                              <th className="p-2 text-left text-slate-400 font-medium min-w-[100px] sticky left-0 bg-slate-900/95 z-10">策略</th>
                               {STRATEGY_CONFIG.map(s => (
                                 <th key={s.name} className="p-2 text-slate-400 font-medium whitespace-nowrap">
                                   {s.displayName || s.name}
@@ -1272,7 +1283,7 @@ export default function PerformanceDashboard() {
                                 const rowConfig = STRATEGY_CONFIG.find(s => s.name === row.name);
                                 return (
                                   <tr key={row.name}>
-                                    <td className="p-2 text-slate-400 font-medium text-left whitespace-nowrap">
+                                    <td className="p-2 text-slate-400 font-medium text-left whitespace-nowrap sticky left-0 bg-slate-900/95 z-10">
                                       {rowConfig?.displayName || row.name}
                                     </td>
                                     {STRATEGY_CONFIG.map(col => {
