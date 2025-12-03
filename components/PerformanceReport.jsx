@@ -688,26 +688,84 @@ export default function PerformanceDashboard() {
     const winRateMap = {}; // Store win rate for each month: { year: { month: winRate } }
     
     data.forEach(d => {
-      if (d && d.year && d.month !== undefined) {
-        const year = d.year;
-        const month = d.month;
-        if (!map[year]) map[year] = {};
-        if (!map[year][month]) map[year][month] = 0;
-        map[year][month] += (d.pnl || 0);
+      if (!d || !d.pnl) return;
+      
+      // Extract year and month from date if not present
+      let year = d.year;
+      let month = d.month;
+      
+      if (!year || month === undefined) {
+        try {
+          const date = d.date ? new Date(d.date) : null;
+          if (date && !isNaN(date.getTime())) {
+            year = year || date.getFullYear();
+            month = month !== undefined ? month : (date.getMonth() + 1);
+          } else {
+            return; // Skip if date is invalid
+          }
+        } catch (e) {
+          // If date parsing fails, try to extract from string
+          if (d.date && typeof d.date === 'string') {
+            const parts = d.date.split('-');
+            if (parts.length >= 2) {
+              year = year || parseInt(parts[0]);
+              month = month !== undefined ? month : parseInt(parts[1]);
+            } else {
+              return; // Skip if date format is invalid
+            }
+          } else {
+            return; // Skip if no date available
+          }
+        }
       }
+      
+      // Ensure year and month are valid numbers
+      if (!year || !month || isNaN(year) || isNaN(month)) return;
+      
+      if (!map[year]) map[year] = {};
+      if (!map[year][month]) map[year][month] = 0;
+      map[year][month] += (d.pnl || 0);
     });
 
     // Calculate monthly win rate
     const monthlyStats = {}; // { year: { month: { wins: 0, total: 0 } } }
     data.forEach(d => {
-      if (d && d.year && d.month !== undefined) {
-        const year = d.year;
-        const month = d.month;
-        if (!monthlyStats[year]) monthlyStats[year] = {};
-        if (!monthlyStats[year][month]) monthlyStats[year][month] = { wins: 0, total: 0 };
-        monthlyStats[year][month].total++;
-        if (d.pnl > 0) monthlyStats[year][month].wins++;
+      if (!d || !d.pnl) return;
+      
+      // Extract year and month from date if not present
+      let year = d.year;
+      let month = d.month;
+      
+      if (!year || month === undefined) {
+        try {
+          const date = d.date ? new Date(d.date) : null;
+          if (date && !isNaN(date.getTime())) {
+            year = year || date.getFullYear();
+            month = month !== undefined ? month : (date.getMonth() + 1);
+          } else {
+            return;
+          }
+        } catch (e) {
+          if (d.date && typeof d.date === 'string') {
+            const parts = d.date.split('-');
+            if (parts.length >= 2) {
+              year = year || parseInt(parts[0]);
+              month = month !== undefined ? month : parseInt(parts[1]);
+            } else {
+              return;
+            }
+          } else {
+            return;
+          }
+        }
       }
+      
+      if (!year || !month || isNaN(year) || isNaN(month)) return;
+      
+      if (!monthlyStats[year]) monthlyStats[year] = {};
+      if (!monthlyStats[year][month]) monthlyStats[year][month] = { wins: 0, total: 0 };
+      monthlyStats[year][month].total++;
+      if (d.pnl > 0) monthlyStats[year][month].wins++;
     });
 
     // Calculate win rate percentage
@@ -720,39 +778,57 @@ export default function PerformanceDashboard() {
     });
 
     const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    const years = Object.keys(map).sort().reverse();
+    const years = Object.keys(map).sort((a, b) => parseInt(b) - parseInt(a)); // Sort descending
     
     return { years, months, map, winRateMap };
   }, [currentViewContext, positionSizes]);
 
 
-  // --- 3. Portfolio Correlation (TWD Basis) ---
+  // --- 3. Portfolio Correlation (TWD Basis) - Daily Period ---
   const correlationMatrix = useMemo(() => {
     if (selectedStrategy !== 'Portfolio') return null;
     const { data: portfolioData } = currentViewContext;
     if (!portfolioData || portfolioData.length === 0) return null;
     
     const matrix = [];
+    // Calculate Pearson correlation coefficient using daily PnL data
     const calculateCorrelation = (arr1, arr2) => {
       const n = arr1.length;
-      if (n === 0) return 0;
-      const mean1 = arr1.reduce((a, b) => a + b, 0) / n;
-      const mean2 = arr2.reduce((a, b) => a + b, 0) / n;
-      let num = 0, den1 = 0, den2 = 0;
+      if (n === 0 || n < 2) return 0; // Need at least 2 data points
+      
+      // Filter out invalid values
+      const validPairs = [];
       for (let i = 0; i < n; i++) {
-        const dx = arr1[i] - mean1;
-        const dy = arr2[i] - mean2;
+        if (arr1[i] !== null && arr1[i] !== undefined && 
+            arr2[i] !== null && arr2[i] !== undefined &&
+            !isNaN(arr1[i]) && !isNaN(arr2[i])) {
+          validPairs.push([arr1[i], arr2[i]]);
+        }
+      }
+      
+      if (validPairs.length < 2) return 0;
+      
+      const mean1 = validPairs.reduce((sum, pair) => sum + pair[0], 0) / validPairs.length;
+      const mean2 = validPairs.reduce((sum, pair) => sum + pair[1], 0) / validPairs.length;
+      
+      let num = 0, den1 = 0, den2 = 0;
+      for (let i = 0; i < validPairs.length; i++) {
+        const dx = validPairs[i][0] - mean1;
+        const dy = validPairs[i][1] - mean2;
         num += dx * dy;
         den1 += dx * dx;
         den2 += dy * dy;
       }
+      
       const den = Math.sqrt(den1 * den2);
       return den === 0 ? 0 : num / den;
     };
 
+    // Use daily PnL data for correlation calculation
     STRATEGY_CONFIG.forEach(rowStrat => {
       const row = { name: rowStrat.name };
       STRATEGY_CONFIG.forEach(colStrat => {
+        // Extract daily PnL for each strategy (日週期)
         const data1 = portfolioData.map(d => d[`pnlTWD_${rowStrat.name}`] || 0);
         const data2 = portfolioData.map(d => d[`pnlTWD_${colStrat.name}`] || 0);
         row[colStrat.name] = calculateCorrelation(data1, data2);
@@ -1252,30 +1328,38 @@ export default function PerformanceDashboard() {
                         PnL Contribution ({currentViewContext.currency})
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[calc(100%-60px)] flex items-center justify-center">
+                    <CardContent className="h-[calc(100%-60px)] p-4">
                       {contributionData && contributionData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={contributionData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={0}
-                              outerRadius={120}
-                              paddingAngle={2}
-                              dataKey="value"
-                              stroke="none"
-                            >
+                          <BarChart data={contributionData.sort((a, b) => b.value - a.value)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                            <XAxis 
+                              dataKey="name" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={100}
+                              tick={{fontSize: 11, fill: '#94a3b8'}}
+                              interval={0}
+                            />
+                            <YAxis 
+                              tick={{fontSize: 11, fill: '#94a3b8'}}
+                              tickFormatter={(val) => `${(val/1000).toFixed(0)}k`}
+                            />
+                            <Tooltip 
+                              content={<CompactTooltip symbol="NT$" />}
+                              cursor={{fill: 'rgba(255,255,255,0.1)'}}
+                            />
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                               {contributionData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.fill} />
                               ))}
-                            </Pie>
-                            <Tooltip content={<CompactTooltip symbol="NT$" />} />
-                            <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '12px', right: 20, color: '#94a3b8' }} />
-                          </PieChart>
+                            </Bar>
+                          </BarChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="text-slate-500 text-sm">No contribution data available</div>
+                        <div className="flex items-center justify-center h-full text-slate-500 text-sm">
+                          No contribution data available
+                        </div>
                       )}
                     </CardContent>
                   </Card>
