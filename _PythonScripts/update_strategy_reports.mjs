@@ -30,6 +30,17 @@ const STRATEGY_CONFIG = [
     ]
   },
   { 
+    name: 'MNQ_VIX_120', 
+    originalCurrency: 'USD', 
+    color: '#3b82f6', 
+    icon: 'NT$', 
+    displayName: 'MNQ VIX 120',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_VIX_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_VIX_120 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
     name: 'MNQ_ZN_120', 
     originalCurrency: 'USD', 
     color: '#06b6d4', 
@@ -60,18 +71,6 @@ const STRATEGY_CONFIG = [
     filePatterns: [
       'CME.MNQ HOT  MNQ_6J_120_BackTest 策略回測績效報告.xlsx',
       'CME.MNQ HOT  MNQ_6J_120 策略回測績效報告.xlsx'
-    ]
-  },
-  { 
-    name: 'MXF_VIX_120', 
-    originalCurrency: 'TWD', 
-    color: '#f59e0b', 
-    icon: 'NT$', 
-    displayName: 'MXF VIX 120',
-    filePatterns: [
-      'CME.MNQ HOT  TXF_VIX_120_BackTest 策略回測績效報告.xlsx',
-      'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx',
-      'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
     ]
   },
 ];
@@ -184,11 +183,14 @@ async function updateStrategyReports() {
     // 轉換每日數據
     const dataTWD = strategy.data.map(d => {
       allDates.add(d.date);
+      const convertedPnl = d.pnl * rate;
+      const convertedEquity = d.equity * rate;
       return {
         ...d,
-        pnl: d.pnl * rate,
-        equity: d.equity * rate,
-        pnlTWD: d.pnl * rate
+        pnl: convertedPnl,
+        equity: convertedEquity,
+        pnlTWD: convertedPnl,
+        currency: 'TWD' // 更新貨幣標記為 TWD
       };
     });
     
