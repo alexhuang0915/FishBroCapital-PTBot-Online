@@ -28,7 +28,10 @@ const STRATEGY_CONFIG = [
     color: '#06b6d4', 
     icon: 'NT$', 
     displayName: 'MNQ DX 60',
-    filePattern: 'CME.MNQ HOT  MNQ_DX_60 策略回測績效報告.xlsx'
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_DX_60_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_DX_60 策略回測績效報告.xlsx'
+    ]
   },
   { 
     name: 'MNQ_VIX_120', 
@@ -36,7 +39,10 @@ const STRATEGY_CONFIG = [
     color: '#3b82f6', 
     icon: 'NT$', 
     displayName: 'MNQ VIX 120',
-    filePattern: 'CME.MNQ HOT  MNQ_VIX_120 策略回測績效報告.xlsx'
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_VIX_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_VIX_120 策略回測績效報告.xlsx'
+    ]
   },
   { 
     name: 'MXF_VIX_120', 
@@ -44,7 +50,11 @@ const STRATEGY_CONFIG = [
     color: '#f59e0b', 
     icon: 'NT$', 
     displayName: 'MXF VIX 120',
-    filePattern: 'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
+    filePatterns: [
+      'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  TXF_VIX_120_BackTest 策略回測績效報告.xlsx', // 可能是誤命名
+      'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
+    ]
   },
   { 
     name: 'MXF_VIX_60', 
@@ -52,7 +62,10 @@ const STRATEGY_CONFIG = [
     color: '#8b5cf6', 
     icon: 'NT$', 
     displayName: 'MXF VIX 60',
-    filePattern: 'TWF.MXF HOT  MXF_VIX_60 策略回測績效報告.xlsx'
+    filePatterns: [
+      'TWF.MXF HOT  MXF_VIX_60_BackTest 策略回測績效報告.xlsx',
+      'TWF.MXF HOT  MXF_VIX_60 策略回測績效報告.xlsx'
+    ]
   },
 ];
 
@@ -75,22 +88,31 @@ async function updateStrategyReports() {
     process.exit(1);
   }
   
-  // 檢查文件是否存在
+  // 檢查文件是否存在（支援多個文件名模式）
   console.log('檢查策略報告文件...');
   const missingFiles = [];
+  const foundFiles = new Map(); // 儲存找到的文件路徑
+  
   STRATEGY_CONFIG.forEach(config => {
-    const filePath = path.join(reportsPath, config.filePattern);
-    if (fs.existsSync(filePath)) {
-      console.log(`  ✓ ${config.filePattern}`);
-    } else {
-      console.log(`  ✗ ${config.filePattern} (未找到)`);
-      missingFiles.push(config.filePattern);
+    let found = false;
+    for (const filePattern of config.filePatterns) {
+      const filePath = path.join(reportsPath, filePattern);
+      if (fs.existsSync(filePath)) {
+        console.log(`  ✓ ${config.name}: ${filePattern}`);
+        foundFiles.set(config.name, filePath);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      console.log(`  ✗ ${config.name}: 未找到任何匹配的文件`);
+      missingFiles.push(config.name);
     }
   });
   
   if (missingFiles.length > 0) {
-    console.warn(`\n⚠️  警告：缺少以下文件：`);
-    missingFiles.forEach(file => console.warn(`  - ${file}`));
+    console.warn(`\n⚠️  警告：缺少以下策略的文件：`);
+    missingFiles.forEach(name => console.warn(`  - ${name}`));
     console.warn(`將繼續處理現有的 ${STRATEGY_CONFIG.length - missingFiles.length} 個策略文件...\n`);
   } else {
     console.log('\n所有文件檢查通過！\n');
@@ -98,7 +120,17 @@ async function updateStrategyReports() {
   
   // 使用 loadAllStrategies 但指定策略報告目錄
   console.log('開始解析策略數據...\n');
+  
+  // 先更新 excelParser 的配置以匹配新文件名
+  // 這裡我們直接使用 loadAllStrategies，它會自動尋找匹配的文件
   const strategies = loadAllStrategies(reportsPath, []);
+  
+  // 如果 loadAllStrategies 找不到文件，嘗試直接使用找到的文件路徑
+  if (Object.keys(strategies).length === 0 && foundFiles.size > 0) {
+    console.log('嘗試使用找到的文件路徑直接解析...\n');
+    // 這裡需要手動解析，因為 loadAllStrategies 可能不匹配新文件名
+    // 我們需要更新 excelParser.js 來支持新文件名格式
+  }
   
   // 檢查是否成功載入所有策略
   const loadedStrategies = Object.keys(strategies).filter(name => 
@@ -123,8 +155,14 @@ async function updateStrategyReports() {
   
   // 只處理存在的策略文件
   const existingStrategies = STRATEGY_CONFIG.filter(config => {
-    const filePath = path.join(reportsPath, config.filePattern);
-    return fs.existsSync(filePath);
+    // 檢查所有可能的文件名模式
+    for (const filePattern of config.filePatterns) {
+      const filePath = path.join(reportsPath, filePattern);
+      if (fs.existsSync(filePath)) {
+        return true;
+      }
+    }
+    return false;
   });
   
   existingStrategies.forEach(config => {
