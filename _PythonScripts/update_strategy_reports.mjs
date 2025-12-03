@@ -1,38 +1,12 @@
-/**
- * Update Strategy Reports from Excel Files
- * 從策略報告目錄更新策略數據
- * 
- * 使用方法：
- * npm run update-strategies
- * 
- * 或直接運行：
- * node _PythonScripts/update_strategy_reports.mjs
- */
-
-import { loadAllStrategies } from '../lib/excelParser.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { loadAllStrategies } from '../lib/excelParser.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 匯率設定（USD 轉 TWD）
-const USD_TO_TWD_RATE = 32.5;
-
-// 策略配置
 const STRATEGY_CONFIG = [
-  { 
-    name: 'MNQ_DX_60', 
-    originalCurrency: 'USD', 
-    color: '#06b6d4', 
-    icon: 'NT$', 
-    displayName: 'MNQ DX 60',
-    filePatterns: [
-      'CME.MNQ HOT  MNQ_DX_60_BackTest 策略回測績效報告.xlsx',
-      'CME.MNQ HOT  MNQ_DX_60 策略回測績效報告.xlsx'
-    ]
-  },
   { 
     name: 'MNQ_DX_120', 
     originalCurrency: 'USD', 
@@ -56,17 +30,6 @@ const STRATEGY_CONFIG = [
     ]
   },
   { 
-    name: 'MNQ_ZN_60', 
-    originalCurrency: 'USD', 
-    color: '#14b8a6', 
-    icon: 'NT$', 
-    displayName: 'MNQ ZN 60',
-    filePatterns: [
-      'CME.MNQ HOT  MNQ_ZN_60_BackTest 策略回測績效報告.xlsx',
-      'CME.MNQ HOT  MNQ_ZN_60 策略回測績效報告.xlsx'
-    ]
-  },
-  { 
     name: 'MNQ_ZN_120', 
     originalCurrency: 'USD', 
     color: '#06b6d4', 
@@ -78,14 +41,36 @@ const STRATEGY_CONFIG = [
     ]
   },
   { 
+    name: 'MNQ_6J_60', 
+    originalCurrency: 'USD', 
+    color: '#14b8a6', 
+    icon: 'NT$', 
+    displayName: 'MNQ 6J 60',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_6J_60_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_6J_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MNQ_6J_120', 
+    originalCurrency: 'USD', 
+    color: '#22d3ee', 
+    icon: 'NT$', 
+    displayName: 'MNQ 6J 120',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_6J_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_6J_120 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
     name: 'MXF_VIX_120', 
     originalCurrency: 'TWD', 
     color: '#f59e0b', 
     icon: 'NT$', 
     displayName: 'MXF VIX 120',
     filePatterns: [
+      'CME.MNQ HOT  TXF_VIX_120_BackTest 策略回測績效報告.xlsx',
       'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx',
-      'CME.MNQ HOT  TXF_VIX_120_BackTest 策略回測績效報告.xlsx', // 可能是誤命名
       'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
     ]
   },
@@ -142,9 +127,6 @@ async function updateStrategyReports() {
   
   // 使用 loadAllStrategies 但指定策略報告目錄
   console.log('開始解析策略數據...\n');
-  
-  // 先更新 excelParser 的配置以匹配新文件名
-  // 這裡我們直接使用 loadAllStrategies，它會自動尋找匹配的文件
   const strategies = loadAllStrategies(reportsPath, []);
   
   // 如果 loadAllStrategies 找不到文件，嘗試直接使用找到的文件路徑
@@ -195,132 +177,115 @@ async function updateStrategyReports() {
     }
     
     const originalCurrency = config.originalCurrency;
-    const rate = originalCurrency === 'USD' ? USD_TO_TWD_RATE : 1;
+    const rate = originalCurrency === 'USD' ? 32.5 : 1;
     
     console.log(`  ${config.name}: ${originalCurrency} → TWD (匯率: ${rate})`);
     
-    // 轉換每日數據為 TWD 並正規化起始權益為 1,000,000 TWD
-    const targetStartEquity = 1000000;
-    const firstDataPoint = strategy.data[0];
-    const firstStartEquityTWD = firstDataPoint 
-      ? (firstDataPoint.equity - firstDataPoint.pnl) * rate 
-      : targetStartEquity;
-    const equityOffset = targetStartEquity - firstStartEquityTWD;
-    
-    const convertedData = strategy.data.map((d, i) => {
-      const pnlTWD = d.pnl * rate;
-      const originalEquityTWD = d.equity * rate;
-      const equityTWD = originalEquityTWD + equityOffset;
-      
+    // 轉換每日數據
+    const dataTWD = strategy.data.map(d => {
+      allDates.add(d.date);
       return {
         ...d,
-        id: i + 1,
-        pnl: Math.round(pnlTWD * 100) / 100,
-        equity: Math.round(equityTWD * 100) / 100,
-        currency: 'TWD'
+        pnl: d.pnl * rate,
+        equity: d.equity * rate,
+        pnlTWD: d.pnl * rate
       };
     });
     
-    strategiesDataTWD[config.name] = convertedData;
-    convertedData.forEach(d => allDates.add(d.date));
-    
-    // 轉換交易數據為 TWD
-    const convertedTrades = (strategy.trades || []).map(trade => ({
-      ...trade,
-      pnl: Math.round(trade.pnl * rate * 100) / 100
+    // 轉換交易數據
+    const tradesTWD = (strategy.trades || []).map(t => ({
+      ...t,
+      pnl: t.pnl * rate,
+      pnlTWD: t.pnl * rate
     }));
     
-    strategiesTradesTWD[config.name] = convertedTrades;
+    strategiesDataTWD[config.name] = dataTWD;
+    strategiesTradesTWD[config.name] = tradesTWD;
   });
   
-  console.log('✓ 貨幣轉換完成\n');
+  console.log('✓ 貨幣轉換完成');
   
-  // 建立原始投資組合數據（不含口數縮放）
+  // 生成組合投資組合數據
+  const portfolioData = [];
   const sortedDates = Array.from(allDates).sort();
   
-  const strategyDataMaps = {};
-  Object.keys(strategiesDataTWD).forEach(strategyName => {
-    const dataMap = new Map();
-    strategiesDataTWD[strategyName].forEach(d => {
-      dataMap.set(d.date, d);
-    });
-    strategyDataMaps[strategyName] = dataMap;
-  });
-  
-  const rawPortfolioData = sortedDates.map((date, i) => {
-    const dayStats = { 
-      date, 
-      year: new Date(date).getFullYear(), 
-      month: new Date(date).getMonth() + 1 
-    };
+  sortedDates.forEach(date => {
+    let dailyTotalPnlTWD = 0;
+    const dayStats = { date };
     
-    // 只處理存在的策略
-    existingStrategies.forEach(cfg => {
-      const sData = strategyDataMaps[cfg.name]?.get(date);
-      if (sData) {
-        dayStats[`pnl_${cfg.name}`] = sData.pnl;
-        dayStats[`pnlTWD_${cfg.name}`] = sData.pnl;
+    existingStrategies.forEach(config => {
+      const strategyData = strategiesDataTWD[config.name];
+      if (!strategyData) return;
+      
+      const dayData = strategyData.find(d => d.date === date);
+      if (dayData) {
+        dailyTotalPnlTWD += dayData.pnl;
+        dayStats[`pnl_${config.name}`] = dayData.pnl;
+        dayStats[`pnlTWD_${config.name}`] = dayData.pnl;
       }
     });
     
-    return dayStats;
+    const prevEquity = portfolioData.length > 0 
+      ? portfolioData[portfolioData.length - 1].equity 
+      : 2000000; // 初始權益 200 萬
+    
+    portfolioData.push({
+      ...dayStats,
+      pnl: dailyTotalPnlTWD,
+      equity: prevEquity + dailyTotalPnlTWD
+    });
   });
   
-  // 建立輸出目錄
-  const outputDir = path.join(basePath, 'public', 'data');
+  // 生成最終輸出
+  const output = {
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      strategyCount: Object.keys(strategiesDataTWD).length,
+      totalDays: sortedDates.length,
+      dateRange: sortedDates.length > 0 ? {
+        start: sortedDates[0],
+        end: sortedDates[sortedDates.length - 1]
+      } : null
+    },
+    strategies: strategiesDataTWD,
+    trades: strategiesTradesTWD,
+    rawPortfolioData: portfolioData
+  };
+  
+  // 寫入文件
+  const outputPath = path.join(basePath, 'public', 'data', 'strategies.json');
+  const outputDir = path.dirname(outputPath);
+  
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
   
-  // 儲存預處理數據
-  const outputData = {
-    strategies: strategiesDataTWD,
-    trades: strategiesTradesTWD,
-    rawPortfolioData: rawPortfolioData,
-    metadata: {
-      generatedAt: new Date().toISOString(),
-      totalStrategies: Object.keys(strategiesDataTWD).length,
-      totalDates: sortedDates.length,
-      dateRange: {
-        start: sortedDates[0],
-        end: sortedDates[sortedDates.length - 1]
-      },
-      exchangeRate: {
-        USD_TO_TWD: USD_TO_TWD_RATE
-      }
-    }
-  };
+  fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf8');
   
-  const outputPath = path.join(outputDir, 'strategies.json');
-  fs.writeFileSync(outputPath, JSON.stringify(outputData, null, 2), 'utf8');
+  const fileSize = fs.statSync(outputPath).size;
+  const fileSizeKB = (fileSize / 1024).toFixed(2);
   
-  console.log('============================================================');
+  console.log('\n============================================================');
   console.log('✓ 數據更新完成！');
   console.log('============================================================');
   console.log(`輸出檔案: ${outputPath}`);
   console.log(`  - 策略數量: ${Object.keys(strategiesDataTWD).length}`);
   console.log(`  - 總天數: ${sortedDates.length}`);
-  console.log(`  - 日期範圍: ${sortedDates[0]} ~ ${sortedDates[sortedDates.length - 1]}`);
-  console.log(`  - 檔案大小: ${(fs.statSync(outputPath).size / 1024).toFixed(2)} KB`);
+  if (sortedDates.length > 0) {
+    console.log(`  - 日期範圍: ${sortedDates[0]} ~ ${sortedDates[sortedDates.length - 1]}`);
+  }
+  console.log(`  - 檔案大小: ${fileSizeKB} KB`);
   console.log('============================================================\n');
   
-  return outputPath;
+  console.log('✓ 策略報表更新成功！\n');
+  console.log('下一步：');
+  console.log('1. 檢查 ' + outputPath + ' 是否正確');
+  console.log('2. 如需部署到線上，請執行部署指令');
 }
 
-// 執行更新
-try {
-  const outputPath = await updateStrategyReports();
-  console.log('✓ 策略報表更新成功！');
-  console.log(`\n下一步：`);
-  console.log(`1. 檢查 ${outputPath} 是否正確`);
-  console.log(`2. 如需部署到線上，請執行部署指令`);
-  process.exit(0);
-} catch (error) {
+updateStrategyReports().catch(error => {
   console.error('\n❌ 更新失敗:', error);
   console.error('錯誤詳情:', error.message);
-  if (error.stack) {
-    console.error('堆疊追蹤:', error.stack);
-  }
+  console.error('堆疊追蹤:', error.stack);
   process.exit(1);
-}
-
+});

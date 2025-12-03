@@ -22,11 +22,11 @@ const RATES = {
 };
 
 const STRATEGY_CONFIG = [
-  { name: 'MNQ_DX_60', originalCurrency: 'USD', color: '#06b6d4', icon: 'NT$', displayName: 'MNQ DX 60' },
   { name: 'MNQ_DX_120', originalCurrency: 'USD', color: '#0891b2', icon: 'NT$', displayName: 'MNQ DX 120' },
   { name: 'MNQ_VIX_60', originalCurrency: 'USD', color: '#10b981', icon: 'NT$', displayName: 'MNQ VIX 60' },
-  { name: 'MNQ_ZN_60', originalCurrency: 'USD', color: '#14b8a6', icon: 'NT$', displayName: 'MNQ ZN 60' },
   { name: 'MNQ_ZN_120', originalCurrency: 'USD', color: '#06b6d4', icon: 'NT$', displayName: 'MNQ ZN 120' },
+  { name: 'MNQ_6J_60', originalCurrency: 'USD', color: '#14b8a6', icon: 'NT$', displayName: 'MNQ 6J 60' },
+  { name: 'MNQ_6J_120', originalCurrency: 'USD', color: '#22d3ee', icon: 'NT$', displayName: 'MNQ 6J 120' },
   { name: 'MXF_VIX_120', originalCurrency: 'TWD', color: '#f59e0b', icon: 'NT$', displayName: 'MXF VIX 120' },
 ];
 
