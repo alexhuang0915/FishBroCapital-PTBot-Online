@@ -177,21 +177,12 @@ export default function PerformanceDashboard() {
   const [positionSizes, setPositionSizes] = useState(() => {
     const sizes = {};
     STRATEGY_CONFIG.forEach(cfg => {
-      // Default position sizes based on portfolio configuration:
-      // MNQ: DX60 (攻撃) = 5, VIX120 (防守) = 3
-      // MXF: VIX120 (主力) = 6, VIX60 (輔助) = 1
-      if (cfg.name === 'MNQ_DX_60') {
-        sizes[cfg.name] = 5;
-      } else if (cfg.name === 'MNQ_VIX_120') {
-        sizes[cfg.name] = 3;
-      } else if (cfg.name === 'MXF_VIX_120') {
-        sizes[cfg.name] = 6;
-      } else if (cfg.name === 'MXF_VIX_60') {
-        sizes[cfg.name] = 1;
-      } else {
-        sizes[cfg.name] = 1; // Fallback
-      }
+      // Default position sizes - 預設所有策略為 1 口
+      sizes[cfg.name] = 1;
     });
+    // 特殊設定：MNQ_VIX_120 和 MXF_VIX_120 為 2 口
+    sizes['MNQ_VIX_120'] = 2;
+    sizes['MXF_VIX_120'] = 2;
     return sizes;
   });
   
