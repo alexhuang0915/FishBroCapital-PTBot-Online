@@ -34,14 +34,47 @@ const STRATEGY_CONFIG = [
     ]
   },
   { 
-    name: 'MNQ_VIX_120', 
+    name: 'MNQ_DX_120', 
     originalCurrency: 'USD', 
-    color: '#3b82f6', 
+    color: '#0891b2', 
     icon: 'NT$', 
-    displayName: 'MNQ VIX 120',
+    displayName: 'MNQ DX 120',
     filePatterns: [
-      'CME.MNQ HOT  MNQ_VIX_120_BackTest 策略回測績效報告.xlsx',
-      'CME.MNQ HOT  MNQ_VIX_120 策略回測績效報告.xlsx'
+      'CME.MNQ HOT  MNQ_DX_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_DX_120 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MNQ_VIX_60', 
+    originalCurrency: 'USD', 
+    color: '#10b981', 
+    icon: 'NT$', 
+    displayName: 'MNQ VIX 60',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_VIX_60_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_VIX_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MNQ_ZN_60', 
+    originalCurrency: 'USD', 
+    color: '#14b8a6', 
+    icon: 'NT$', 
+    displayName: 'MNQ ZN 60',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_ZN_60_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_ZN_60 策略回測績效報告.xlsx'
+    ]
+  },
+  { 
+    name: 'MNQ_ZN_120', 
+    originalCurrency: 'USD', 
+    color: '#06b6d4', 
+    icon: 'NT$', 
+    displayName: 'MNQ ZN 120',
+    filePatterns: [
+      'CME.MNQ HOT  MNQ_ZN_120_BackTest 策略回測績效報告.xlsx',
+      'CME.MNQ HOT  MNQ_ZN_120 策略回測績效報告.xlsx'
     ]
   },
   { 
@@ -54,17 +87,6 @@ const STRATEGY_CONFIG = [
       'TWF.MXF HOT  MXF_VIX_120_BackTest 策略回測績效報告.xlsx',
       'CME.MNQ HOT  TXF_VIX_120_BackTest 策略回測績效報告.xlsx', // 可能是誤命名
       'TWF.MXF HOT  MXF_VIX_120 策略回測績效報告.xlsx'
-    ]
-  },
-  { 
-    name: 'MXF_VIX_60', 
-    originalCurrency: 'TWD', 
-    color: '#8b5cf6', 
-    icon: 'NT$', 
-    displayName: 'MXF VIX 60',
-    filePatterns: [
-      'TWF.MXF HOT  MXF_VIX_60_BackTest 策略回測績效報告.xlsx',
-      'TWF.MXF HOT  MXF_VIX_60 策略回測績效報告.xlsx'
     ]
   },
 ];
