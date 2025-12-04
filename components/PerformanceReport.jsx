@@ -180,9 +180,20 @@ export default function PerformanceDashboard() {
       // Default position sizes - 預設所有策略為 1 口
       sizes[cfg.name] = 1;
     });
-    // 特殊設定：MNQ_VIX_120 和 MXF_VIX_120 為 2 口
-    sizes['MNQ_VIX_120'] = 2;
-    sizes['MXF_VIX_120'] = 2;
+    // MNQ 操你媽戰隊配置 (總口數 7 口)
+    sizes['MNQ_6J_60'] = 2;      // 主力
+    sizes['MNQ_VIX_120'] = 1;
+    sizes['MNQ_ZN_120'] = 1;
+    sizes['MNQ_6J_120'] = 1;
+    sizes['MNQ_DX_120'] = 1;
+    sizes['MNQ_VIX_60'] = 1;
+    // MXF 操他媽戰隊配置 (總口數 8 口)
+    sizes['MXF_VIX_120'] = 2;    // 重砲手
+    sizes['MXF_DX_60'] = 2;      // 防禦核心
+    sizes['MXF_VIX_60'] = 1;
+    sizes['MXF_ZN_120'] = 1;
+    sizes['MXF_6J_60'] = 1;
+    sizes['MXF_DX_120'] = 1;
     return sizes;
   });
   
