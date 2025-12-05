@@ -63,6 +63,41 @@ async function preprocessStrategies() {
   console.log('Loading strategies from CSV files...');
   const strategies = loadAllStrategies(basePath, searchPaths);
   
+  // Check if we actually loaded any data
+  const hasData = Object.keys(strategies).some(name => {
+    const strategy = strategies[name];
+    return strategy && strategy.data && strategy.data.length > 0;
+  });
+  
+  if (!hasData) {
+    console.warn('⚠ Warning: No strategy data loaded. This might be a build environment without CSV files.');
+    console.warn('⚠ Skipping preprocessing to preserve existing strategies.json file.');
+    
+    // Check if existing file exists and has data
+    const existingFilePath = path.join(publicDataPath, 'strategies.json');
+    if (fs.existsSync(existingFilePath)) {
+      try {
+        const existingData = JSON.parse(fs.readFileSync(existingFilePath, 'utf8'));
+        const existingHasData = Object.keys(existingData.strategies || {}).some(name => {
+          const strategy = existingData.strategies[name];
+          return Array.isArray(strategy) && strategy.length > 0;
+        });
+        
+        if (existingHasData) {
+          console.log('✓ Existing strategies.json has data, preserving it.');
+          console.log(`  Strategies: ${Object.keys(existingData.strategies || {}).length}`);
+          console.log(`  Portfolio days: ${existingData.rawPortfolioData?.length || 0}`);
+          return; // Exit early, don't overwrite
+        }
+      } catch (e) {
+        console.warn('⚠ Could not read existing file:', e.message);
+      }
+    }
+    
+    console.error('✗ No data available and no existing file to preserve. Preprocessing failed.');
+    process.exit(1);
+  }
+  
   // Convert all strategies data to TWD
   const strategiesDataTWD = {};
   const strategiesTradesTWD = {};
