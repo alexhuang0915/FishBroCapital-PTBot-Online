@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev",
     "preprocess": "node _PythonScripts/preprocess_strategies.mjs",
-    "build": "npm run preprocess && next build && node scripts/clean-build.js",
+    "build": "npm run preprocess:skip-if-no-csv && next build && node scripts/clean-build.js",
+    "preprocess:skip-if-no-csv": "node -e \"const fs=require('fs');const path=require('path');const csvPath=path.join(process.cwd(),'..','策略報告','CSV');if(fs.existsSync(csvPath)){require('child_process').execSync('npm run preprocess',{stdio:'inherit'});}else{console.log('⚠ No CSV files found, skipping preprocessing. Using existing strategies.json from Git.');}\"",
     "pages:build": "npm run build && npx @cloudflare/next-on-pages@1",
     "start": "next start",
     "lint": "next lint",
