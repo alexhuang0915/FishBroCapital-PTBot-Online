@@ -1,5 +1,7 @@
 name = "fishbrocapital-ptbot-online"
 compatibility_date = "2024-11-30"
 compatibility_flags = ["nodejs_compat"]
+# Cloudflare Pages build output directory
+# Note: @cloudflare/next-on-pages outputs to .vercel/output/static by default
 pages_build_output_dir = ".vercel/output/static"
 

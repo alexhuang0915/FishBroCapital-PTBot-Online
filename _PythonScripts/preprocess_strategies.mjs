@@ -44,9 +44,20 @@ async function preprocessStrategies() {
   const basePath = process.cwd();
   console.log('Base path:', basePath);
   
-  // Search in both root and public/data
+  // Add additional search paths for strategy report files
+  const strategyReportPath = path.join(basePath, '..', '策略報告');
+  const strategyReportCsvPath = path.join(basePath, '..', '策略報告', 'CSV');
   const publicDataPath = path.join(basePath, 'public', 'data');
-  const searchPaths = [basePath, publicDataPath];
+  
+  // Search in multiple locations
+  const searchPaths = [
+    basePath, 
+    publicDataPath,
+    strategyReportPath,
+    strategyReportCsvPath
+  ];
+  
+  console.log('Search paths:', searchPaths);
   
   // Load all strategies using the same function as the API
   console.log('Loading strategies from CSV files...');

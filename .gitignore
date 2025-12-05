@@ -26,24 +26,27 @@ yarn-error.log*
 .env*.local
 .env
 
-# vercel
+# Cloudflare Pages / Next.js build output
+# Note: .vercel/output is used by @cloudflare/next-on-pages adapter
 .vercel
+.vercel/output
+
+# Other deployment platforms
+.netlify
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# uploaded files (but keep original CSV files)
-/public/uploads/*
-!/public/uploads/.gitkeep
 
 # sensitive data - CSV reports (contain trading strategy data)
-# Allow CSV files and preprocessed JSON in public directory for deployment
+# Allow CSV files in public directory for deployment (needed for Cloudflare Pages build)
 *.csv
 *.xlsx
 !public/**/*.csv
 !public/**/*.xlsx
-!public/data/strategies.json
+# Exclude preprocessed JSON (will be generated during build)
+public/data/strategies.json
 
 # API keys and secrets
 .env*.local
@@ -53,7 +56,3 @@ next-env.d.ts
 
 # logs
 *.log
-
-
-# Local Netlify folder
-.netlify

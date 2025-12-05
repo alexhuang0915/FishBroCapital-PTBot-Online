@@ -1,16 +1,13 @@
 {
   "name": "fishbro-capital-ptbot",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/clean-build.js",
+    "preprocess": "node _PythonScripts/preprocess_strategies.mjs",
+    "build": "npm run preprocess && next build && node scripts/clean-build.js",
     "pages:build": "npm run build && npx @cloudflare/next-on-pages@1",
-    "build:cloudflare": "npx @cloudflare/next-on-pages@1",
-    "postbuild": "node scripts/clean-build.js",
     "start": "next start",
     "lint": "next lint",
-    "preprocess": "node _PythonScripts/preprocess_strategies.mjs",
     "update-strategies": "node _PythonScripts/update_strategy_reports.mjs"
   },
   "dependencies": {
