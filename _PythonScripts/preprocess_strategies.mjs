@@ -71,7 +71,7 @@ async function preprocessStrategies() {
   
   if (!hasData) {
     console.warn('⚠ Warning: No strategy data loaded. This might be a build environment without CSV files.');
-    console.warn('⚠ Skipping preprocessing to preserve existing strategies.json file.');
+    console.warn('⚠ Checking for existing strategies.json file to preserve...');
     
     // Check if existing file exists and has data
     const existingFilePath = path.join(publicDataPath, 'strategies.json');
@@ -87,14 +87,25 @@ async function preprocessStrategies() {
           console.log('✓ Existing strategies.json has data, preserving it.');
           console.log(`  Strategies: ${Object.keys(existingData.strategies || {}).length}`);
           console.log(`  Portfolio days: ${existingData.rawPortfolioData?.length || 0}`);
+          console.log('✓ Skipping preprocessing to preserve existing file.');
           return; // Exit early, don't overwrite
+        } else {
+          console.warn('⚠ Existing file found but has no data. Will try to generate from CSV if available.');
         }
       } catch (e) {
         console.warn('⚠ Could not read existing file:', e.message);
       }
+    } else {
+      console.warn('⚠ No existing strategies.json file found.');
+      // In build environment, the file should be copied from Git before build
+      // If it doesn't exist, we need to fail or use a fallback
+      console.error('✗ No data available and no existing file found. Preprocessing failed.');
+      console.error('✗ This should not happen in production. Please ensure strategies.json is in Git.');
+      process.exit(1);
     }
     
-    console.error('✗ No data available and no existing file to preserve. Preprocessing failed.');
+    // If we reach here, existing file has no data, so we can't proceed
+    console.error('✗ Cannot proceed: no CSV data and existing file has no data.');
     process.exit(1);
   }
   
