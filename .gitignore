@@ -46,7 +46,8 @@ next-env.d.ts
 !public/**/*.csv
 !public/**/*.xlsx
 # Exclude preprocessed JSON (will be generated during build)
-public/data/strategies.json
+# Note: strategies.json is now tracked in Git for Cloudflare Pages deployment
+# public/data/strategies.json
 
 # API keys and secrets
 .env*.local
